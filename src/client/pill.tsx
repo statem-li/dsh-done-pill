@@ -615,10 +615,10 @@ body[data-ds-dark-theme] .dsh-done-pill{
 .dsh-done-pill-row:focus-visible{outline:2px solid var(--dpl-accent);outline-offset:-2px}
 .dsh-done-pill-close{transition:background .12s ease,color .12s ease}
 .dsh-done-pill-close:hover{background:var(--dpl-hover);color:var(--dpl-fg)}
-/* 面板滚动条：细线 + 青染滑块。 */
-.dsh-done-pill [role="dialog"]{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--dpl-accent) 55%,var(--dpl-border)) transparent}
-.dsh-done-pill [role="dialog"]::-webkit-scrollbar{width:8px}
-.dsh-done-pill [role="dialog"]::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--dpl-accent) 55%,var(--dpl-border));border-radius:4px}
+/* 面板滚动条：最细细条（3px，无轨道），青染滑块。 */
+.dsh-done-pill [role="dialog"]{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--dpl-accent) 45%,var(--dpl-border)) transparent}
+.dsh-done-pill [role="dialog"]::-webkit-scrollbar{width:3px;height:3px}
+.dsh-done-pill [role="dialog"]::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--dpl-accent) 45%,var(--dpl-border));border-radius:1.5px}
 .dsh-done-pill [role="dialog"]::-webkit-scrollbar-track{background:transparent}
 `
 
