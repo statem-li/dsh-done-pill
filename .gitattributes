@@ -1,0 +1,3 @@
+lib/*.js   text eol=lf
+lib/*.map  -text
+*          text=auto
