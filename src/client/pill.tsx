@@ -616,12 +616,10 @@ body[data-ds-dark-theme] .dsh-done-pill{
 .dsh-done-pill-close{transition:background .12s ease,color .12s ease}
 .dsh-done-pill-close:hover{background:var(--dpl-hover);color:var(--dpl-fg)}
 /* 面板滚动条：最细细条（3px、无轨道、无上下箭头按钮）——作用于面板本身
-   与内部所有可滚动元素（记录卡内的 <pre> 全文等）。 */
-.dsh-done-pill [role="dialog"],
-.dsh-done-pill [role="dialog"] *{
-  scrollbar-width:thin;
-  scrollbar-color:color-mix(in srgb,var(--dpl-accent) 45%,var(--dpl-border)) transparent;
-}
+   与内部所有可滚动元素（记录卡内的 <pre> 全文等）。
+   ⚠ 不能同时写标准 scrollbar-width/scrollbar-color：现代 Chromium 一旦
+   设置标准滚动条属性就会整体忽略 ::-webkit-scrollbar 样式，退回原生
+   （带上下箭头）。此处只走 webkit 伪元素路径。 */
 .dsh-done-pill [role="dialog"]::-webkit-scrollbar,
 .dsh-done-pill [role="dialog"] *::-webkit-scrollbar{width:3px;height:3px}
 .dsh-done-pill [role="dialog"]::-webkit-scrollbar-thumb,

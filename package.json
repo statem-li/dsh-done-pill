@@ -1,6 +1,6 @@
 {
   "name": "dsh-done-pill",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "DSH 对话完成胶囊：顶部悬浮消息胶囊（原 webui done-pill 拆出）——任一会话回合完成提醒、点击跳会话、悬停查看记录全文、可拖拽定位、健康提醒与字体/缩放设置。零 DSH 源码改动，可与 dsh-webui 并存（webui 关闭 donePill 模块即可）。",
   "keywords": [
     "dsh",
