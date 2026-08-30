@@ -529,10 +529,13 @@ const PILL_CSS = `
   --dpl-warn:#b45309;
   --dpl-ok:#15803d;
   --dpl-corner:color-mix(in srgb,var(--dpl-accent) 62%,#ffffff);
+  --dpl-surface:rgba(252,253,254,.88);
+  --dpl-surface-hover:#ffffff;
   --dpl-border:rgba(6,86,108,.34);
   --dpl-divider:rgba(6,86,108,.20);
   --dpl-hover:rgba(14,116,144,.08);
   --dpl-scan:color-mix(in srgb,var(--dpl-accent) 45%,#ffffff);
+  --dpl-shadow:0 1px 3px rgba(16,26,36,.10),0 4px 14px rgba(16,26,36,.14);
   --dpl-panel-bg:#ffffff;
   --dpl-panel-border:rgba(6,86,108,.24);
   --dpl-panel-shadow:0 12px 40px rgba(16,26,36,.16),0 2px 8px rgba(16,26,36,.06);
@@ -549,13 +552,17 @@ body[data-ds-dark-theme] .dsh-done-pill{
   --dpl-border:rgba(103,232,249,.20);
   --dpl-divider:rgba(103,232,249,.16);
   --dpl-hover:rgba(34,211,238,.10);
+  --dpl-surface:rgba(12,19,26,.85);
+  --dpl-surface-hover:rgba(18,28,38,.95);
   --dpl-scan:color-mix(in srgb,var(--dpl-accent) 32%,transparent);
+  --dpl-shadow:0 2px 12px rgba(0,0,0,.4),0 0 0 1px rgba(103,232,249,.05);
   --dpl-panel-bg:rgba(10,14,19,.97);
   --dpl-panel-border:rgba(103,232,249,.16);
   --dpl-panel-shadow:0 16px 44px rgba(0,0,0,.6),0 0 24px color-mix(in srgb,var(--dpl-accent) 10%,transparent);
 }
-/* 外壳：四角实线直角角标（用户指定：直角 + 长短不一、不要太长）——
-   四角 L 形长度各不同（6–11px 档）；无填充面、无四边描边。 */
+/* 外壳：半透明芯片面 + 四角实线直角角标（用户指定：直角 + 长短不一）——
+   有明显存在感（可辨容器/投影/主色文字），四角长度各不同（6–11px 档）。
+   无四边描边；hover 提亮。 */
 .dsh-done-pill-shell{
   background:
     linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 0,
@@ -565,7 +572,8 @@ body[data-ds-dark-theme] .dsh-done-pill{
     linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 100%,
     linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 100%,
     linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 100%,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 100%;
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 100%,
+    var(--dpl-surface);
   background-size:
     calc(10px * var(--dps)) calc(2px * var(--dps)),
     calc(2px * var(--dps)) calc(8px * var(--dps)),
@@ -574,12 +582,34 @@ body[data-ds-dark-theme] .dsh-done-pill{
     calc(9px * var(--dps)) calc(2px * var(--dps)),
     calc(2px * var(--dps)) calc(7px * var(--dps)),
     calc(11px * var(--dps)) calc(2px * var(--dps)),
-    calc(2px * var(--dps)) calc(6px * var(--dps));
+    calc(2px * var(--dps)) calc(6px * var(--dps)),
+    auto;
   background-repeat:no-repeat;
-  color:var(--dpl-fg-dim);
+  color:var(--dpl-fg);
+  box-shadow:var(--dpl-shadow);
 }
 .dsh-done-pill-shell:hover{
-  color:var(--dpl-fg);
+  background:
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 0,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 0,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 0,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 0,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 100%,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 100%,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 100%,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 100%,
+    var(--dpl-surface-hover);
+  background-size:
+    calc(10px * var(--dps)) calc(2px * var(--dps)),
+    calc(2px * var(--dps)) calc(8px * var(--dps)),
+    calc(8px * var(--dps)) calc(2px * var(--dps)),
+    calc(2px * var(--dps)) calc(10px * var(--dps)),
+    calc(9px * var(--dps)) calc(2px * var(--dps)),
+    calc(2px * var(--dps)) calc(7px * var(--dps)),
+    calc(11px * var(--dps)) calc(2px * var(--dps)),
+    calc(2px * var(--dps)) calc(6px * var(--dps)),
+    auto;
+  background-repeat:no-repeat;
 }
 /* 未读态：文字转主色号 + 加重。 */
 .dsh-done-pill-shell[data-unread="1"]{
