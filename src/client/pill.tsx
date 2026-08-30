@@ -520,7 +520,7 @@ const PILL_STYLE_ID = 'dsh-done-pill-css'
 const PILL_CSS = `
 @keyframes dpLineIn{from{opacity:0}to{opacity:1}}
 /* ── 线条科技感（tech-line）：细 1px 描边 + 青色强调 + 光斑动效 ──
-   浅色主题（默认）：白晶体面 + 青染细线 + 冷灰文字；辉光弱化，形状感靠线。 */
+   浅色主题（默认）：全透明底 + 青染细线，形状感纯靠线条（无填充面）。 */
 .dsh-done-pill{
   --dpl-fg:#101a24;
   --dpl-fg-dim:#38485c;
@@ -529,20 +529,20 @@ const PILL_CSS = `
   --dpl-warn:#b45309;
   --dpl-ok:#15803d;
   --dpl-corner:color-mix(in srgb,var(--dpl-accent) 62%,#ffffff);
-  --dpl-surface:rgba(242,250,251,.95);
-  --dpl-surface-hover:#ffffff;
+  --dpl-surface:transparent;
+  --dpl-surface-hover:transparent;
   --dpl-border:rgba(6,86,108,.34);
   --dpl-border-hover:rgba(8,109,134,.62);
   --dpl-divider:rgba(6,86,108,.20);
   --dpl-hover:rgba(14,116,144,.08);
   --dpl-scan:color-mix(in srgb,var(--dpl-accent) 45%,#ffffff);
-  --dpl-shadow:0 1px 2px rgba(16,26,36,.10),0 3px 10px rgba(16,26,36,.12);
   --dpl-shadow-hover:0 2px 5px rgba(16,26,36,.12),0 6px 18px rgba(14,116,144,.18),0 0 0 3px color-mix(in srgb,var(--dpl-accent) 16%,transparent);
   --dpl-panel-bg:#ffffff;
   --dpl-panel-border:rgba(6,86,108,.24);
   --dpl-panel-shadow:0 12px 40px rgba(16,26,36,.16),0 2px 8px rgba(16,26,36,.06);
 }
-/* 深色主题：黑钢面 + 青色细线 + 辉光呼吸，科技仪表观感。 */
+/* 深色主题：全透明底 + 发光细线 + 辉光呼吸，HUD 仪表观感（无填充面，
+   直接浮在页面背景上，同参考图）。 */
 body[data-ds-dark-theme] .dsh-done-pill{
   --dpl-fg:#dbe7ee;
   --dpl-fg-dim:#93a8b5;
@@ -550,21 +550,20 @@ body[data-ds-dark-theme] .dsh-done-pill{
   --dpl-accent:#22d3ee;
   --dpl-warn:#f5b942;
   --dpl-ok:#31d07c;
-  --dpl-surface:rgba(8,13,19,.92);
-  --dpl-surface-hover:rgba(15,23,32,.96);
+  --dpl-surface:transparent;
+  --dpl-surface-hover:transparent;
   --dpl-border:rgba(103,232,249,.20);
   --dpl-border-hover:color-mix(in srgb,var(--dpl-accent) 62%,transparent);
   --dpl-divider:rgba(103,232,249,.16);
   --dpl-hover:rgba(34,211,238,.10);
   --dpl-corner:color-mix(in srgb,var(--dpl-accent) 62%,#ffffff);
   --dpl-scan:color-mix(in srgb,var(--dpl-accent) 32%,transparent);
-  --dpl-shadow:0 2px 10px rgba(0,0,0,.45);
   --dpl-shadow-hover:0 4px 20px rgba(0,0,0,.55),0 0 0 3px color-mix(in srgb,var(--dpl-accent) 12%,transparent),0 0 16px color-mix(in srgb,var(--dpl-accent) 22%,transparent);
   --dpl-panel-bg:rgba(10,14,19,.97);
   --dpl-panel-border:rgba(103,232,249,.16);
   --dpl-panel-shadow:0 16px 44px rgba(0,0,0,.6),0 0 24px color-mix(in srgb,var(--dpl-accent) 10%,transparent);
 }
-/* 外壳：几何由内联样式给，表面/描边/投影/文字色在此（内联写死会盖掉这里）。
+/* 外壳：几何由内联样式给，描边/文字色在此（全透明无填充面）。
    HUD 线条感：左上 + 右下两对角框括标（layered backgrounds，不新增元素、
    不影响宽度测量），底部一条虚线连接轨（::before）。 */
 .dsh-done-pill-shell{
@@ -578,7 +577,6 @@ body[data-ds-dark-theme] .dsh-done-pill{
   background-size:12px 2px,2px 12px,12px 2px,2px 12px,auto;
   background-repeat:no-repeat;
   color:var(--dpl-fg-dim);
-  box-shadow:var(--dpl-shadow);
 }
 .dsh-done-pill-shell::before{
   content:'';position:absolute;left:10px;right:10px;bottom:-4px;
@@ -1983,3 +1981,4 @@ export function applyDonePill(ctx: ClientContext): void {
       label: '胶囊字体',
     }, PillFontRow))
 }
+
