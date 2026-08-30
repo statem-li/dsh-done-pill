@@ -59,9 +59,10 @@ GET /api/dsh-done-pill?since=N
 - CSS 类名（`.dsh-done-pill*`）与样式表 id（`dsh-done-pill-css`）沿用
   webui 原值，注入幂等，两边共存无冲突。
 
-胶囊右侧「文件」按钮通过 `window.dispatchEvent(new CustomEvent(
-'dsh-file-explorer-toggle'))` 开合文件浏览器抽屉——仅当存在监听该事件的
-模块（如 webui 的 fileExplorer 模块）时有效，无监听时点击无副作用。
+与 webui 版的两处差异：① 路由/座位前缀独立（见上）；② **已移除胶囊右侧
+的「文件」按钮**——它依赖 webui fileExplorer 的跨模块事件桥
+（`dsh-file-explorer-toggle`），独立插件里没有监听者，去掉避免无效入口；
+需要文件入口时用 webui（关掉 donePill 模块）或另行装文件浏览器插件。
 
 ## 构建与自测
 

@@ -2,10 +2,12 @@
  * dsh-done-pill — 对话完成胶囊（client 半身）。
  *
  * 移植自 dsh-webui 的 done-pill（_tmp-webui/src/client/done-pill.tsx），拆分
- * 为独立插件。功能与交互原样保留，仅三处与宿主解耦：
+ * 为独立插件。与 webui 版的差异：
  *  - 轮询路由改为 /api/dsh-done-pill（不复用 webui 的 /api/webui-done-pill，
  *    避免与 webui 同时安装时两个宿主模块争抢同一条路由）；
  *  - 槽位 id 改为 dsh-done-pill 前缀（不与 webui 的 done-pill 座位冲突）；
+ *  - 移除胶囊右侧「文件」按钮（依赖 webui fileExplorer 的跨模块事件桥，
+ *    独立插件里没有监听者，去掉避免无效入口；主体/提醒/运行中区块不变）；
  *  - 主题令牌、localStorage 键（dsh.donePill.*）、CSS 类名与样式表 id 保持
  *    原样——与 webui 共享同一套持久化，卸载 webui 后配置无缝延续。
  *
@@ -14,15 +16,12 @@
  *    显示「N 个对话完成 · 「会话」摘要」；
  *  - 点击胶囊主体直接跳进最新完成的会话；鼠标悬停时记录面板从下方滑出，
  *    展示每条的用户问题 + 助手回复全文；
- *  - 胶囊右侧内嵌「文件」按钮（事件桥开合文件浏览器抽屉，仅当存在监听
- *    `dsh-file-explorer-toggle` 的模块时有效）；
  *  - 整体黑色底（不随主题），按住拖拽可移动位置（pointer 拖拽，4px 阈值
  *    区分点击），位置存 localStorage（dsh.donePill.pos）；
  *  - 基础设置「对话完成胶囊」开关可整体隐藏（dsh.donePill.enabled）。
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
-import { IconFolderOpenOutline16 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ClientContext, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
 
 /** shell.overlay 槽位无 owner props（见 DSH slot-catalog），此处仅占位。 */
@@ -494,11 +493,6 @@ function formatElapsed(ms: number): string {
   return `${mm}:${String(ss).padStart(2, '0')}`
 }
 
-/** 请求开合文件浏览器抽屉（FileExplorerEntry 监听同一事件）。 */
-function toggleFileExplorer(): void {
-  window.dispatchEvent(new CustomEvent('dsh-file-explorer-toggle'))
-}
-
 /**
  * 胶囊自带样式表（一次性注入）：keyframes + 全部配色规则。
  *
@@ -764,28 +758,13 @@ function LineIcon(props: { kind: 'sparkle' | 'bulb' | 'moon' | 'coffee'; size?: 
   )
 }
 
-/** 主体与文件钮之间的细分隔线。 */
+/** 主体与左块之间的细分隔线。 */
 const pillDividerStyle: CSSProperties = {
   flex: 'none',
   width: 1,
   margin: 'calc(7px * var(--dps)) 0',
   background: 'var(--dpl-divider)',
 }
-
-/** 胶囊右侧「文件」按钮：点击打开文件浏览器抽屉。 */
-const fileButtonStyle = (hovered: boolean): CSSProperties => ({
-  flex: 'none',
-  width: 'calc(30px * var(--dps))',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  border: 'none',
-  borderRadius: 0,
-  background: hovered ? 'var(--dpl-hover)' : 'transparent',
-  color: hovered ? 'var(--dpl-fg)' : 'var(--dpl-fg-dim)',
-  cursor: 'pointer',
-  transition: 'background .12s ease, color .12s ease',
-})
 
 /** shell 直接子项统一禁止收缩：宽度测量（子块求和）才不受受控宽度污染。 */
 const shellChildStyle: CSSProperties = { flex: 'none' }
@@ -1251,7 +1230,6 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
   const [readIds, setReadIds] = useState<Set<string>>(() => loadReadIds())
   const [hovered, setHovered] = useState(false)
   const [hoveredRunning, setHoveredRunning] = useState(false)
-  const [fileHovered, setFileHovered] = useState(false)
   const [enabled, setEnabled] = useState(enabledStore.get())
   // 注意：initializer 里不能引用下方才声明的 anchorRef（TDZ），直接读存储。
   const [pos, setPos] = useState<PillPos | null>(() => {
@@ -1283,7 +1261,7 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
   const [shellWidth, setShellWidth] = useState<number | null>(null)
   const shellRef = useRef<HTMLDivElement | null>(null)
   const shellWidthRef = useRef<number | null>(null)
-  // 主文案之外的固有宽度（内边距 + 图标 + 分隔线 + 文件按钮 + 提醒徽章 +
+  // 主文案之外的固有宽度（内边距 + 图标 + 分隔线 + 提醒徽章 +
   // 运行中计数块）。文案的 maxWidth 由「外壳上限 − 这个值」算出，才能在
   // 任何组合下都以省略号收尾（写死一个常数在带徽章时会算多，文字仍被硬切）。
   const [decoWidth, setDecoWidth] = useState(80)
@@ -1696,7 +1674,7 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
       onPointerCancel={onPointerCancel}
       onLostPointerCapture={onPointerCancel}
       onMouseEnter={() => { if (dragRef.current === null) setHovered(true) }}
-      onMouseLeave={() => { setHovered(false); setHoveredRunning(false); setFileHovered(false) }}
+      onMouseLeave={() => { setHovered(false); setHoveredRunning(false) }}
     >
       <div
         ref={shellRef}
@@ -1788,20 +1766,6 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
           >
             {displayText}
           </span>
-        </button>
-        {/* 分隔线 + 文件按钮：点击打开文件浏览器抽屉 */}
-        <span style={pillDividerStyle} aria-hidden />
-        <button
-          type="button"
-          style={fileButtonStyle(fileHovered)}
-          aria-label="文件浏览器"
-          title="文件浏览器"
-          onPointerDown={(event) => { event.stopPropagation() }}
-          onMouseEnter={() => { setFileHovered(true); setHovered(false); setHoveredRunning(false) }}
-          onMouseLeave={() => { setFileHovered(false) }}
-          onClick={toggleFileExplorer}
-        >
-          <IconFolderOpenOutline16 size={14} />
         </button>
       </div>
       {/* 运行中任务面板：悬停左块时从下方滑出 */}

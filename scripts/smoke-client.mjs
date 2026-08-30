@@ -124,10 +124,6 @@ const MODULES = {
   },
   'react-dom': { createPortal: (node) => node },
   'react-dom/client': { createRoot: () => ({ render: () => {}, unmount: () => {} }) },
-  '@deepseek-ai/dsh-client-ui-primitives': new Proxy({}, {
-    get: (_t, prop) => (typeof prop === 'string' ? stubComponent(prop) : undefined),
-    has: () => true,
-  }),
 }
 
 // ── capture the loader registration ──────────────────────────────────────
