@@ -565,7 +565,8 @@ body[data-ds-dark-theme] .dsh-done-pill{
 }
 /* 外壳：几何由内联样式给，描边/文字色在此（全透明无填充面）。
    HUD 线条感：左上 + 右下两对角框括标（layered backgrounds，不新增元素、
-   不影响宽度测量），底部一条虚线连接轨（::before）。 */
+   不影响宽度测量）；「字下面一条线」= 外壳底边描边，右上引线（对角线 +
+   平行线 + 运行中计数）为独立组件（见 leaderStyle / runOnLineStyle）。 */
 .dsh-done-pill-shell{
   border:1px solid var(--dpl-border);
   background:
@@ -578,10 +579,8 @@ body[data-ds-dark-theme] .dsh-done-pill{
   background-repeat:no-repeat;
   color:var(--dpl-fg-dim);
 }
-.dsh-done-pill-shell::before{
-  content:'';position:absolute;left:10px;right:10px;bottom:-4px;
-  border-top:1px dashed var(--dpl-border);opacity:.7;pointer-events:none;
-}
+.dsh-done-pill-shell::before{content:'';position:absolute;left:10px;right:10px;bottom:-4px;border-top:1px dashed var(--dpl-border);opacity:0;pointer-events:none}
+.dsh-done-pill-shell:hover::before{opacity:.7}
 .dsh-done-pill-shell:hover{
   background:var(--dpl-surface-hover);
   border-color:var(--dpl-border-hover);
@@ -863,23 +862,56 @@ const floatPanelStyle = (
 const panelStyle = (open: boolean, shiftX: number, up: boolean): CSSProperties =>
   floatPanelStyle(open, shiftX, up, DONE_PANEL_W, 'min(66vh, 600px)', 8, 12)
 
-/** 运行中任务面板：悬停左块时滑出的窄列表。 */
+/** 运行中任务面板：悬停引线上方计数块时滑出的窄列表。 */
 const runPanelStyle = (open: boolean, shiftX: number, up: boolean): CSSProperties =>
   floatPanelStyle(open, shiftX, up, RUN_PANEL_W, 'min(60vh, 480px)', 4, 10)
 
-/** 胶囊左侧「运行中」区块：黄点 + 数量，悬停滑出任务列表。 */
-const runningBlockStyle = (hasRunning: boolean): CSSProperties => ({
-  flex: 'none',
+/**
+ * 右上引线组件（HUD 标注式）：
+ *  - 外壳底边 = 「字下面一条线条」；
+ *  - 从底边右端向右上折一条对角线（leader 左 24px 区域，45°）；
+ *  - 对角线上端接一段平行线（leader 右 32px 区域），高度 = 文字顶部；
+ *  - 平行线上方挂运行中计数块（点击进入最新运行会话）。
+ * 绝对定位在 wrap 内（不动 shell flex 布局，宽度测量不受影响）。
+ */
+const LEADER_DIAG_W = 24
+const LEADER_LINE_W = 32
+
+const leaderStyle = (left: number, top: number): CSSProperties => ({
+  position: 'absolute',
+  left: Math.round(left),
+  top: Math.round(top),
+  width: `calc(${LEADER_DIAG_W + LEADER_LINE_W}px * var(--dps))`,
+  height: 'calc(24px * var(--dps))',
+  pointerEvents: 'none',
+  zIndex: 1,
+  // 右段：平行线（与文字顶部平齐）；左段：45° 对角线（底左 → 顶右）。
+  backgroundImage: [
+    `linear-gradient(var(--dpl-corner),var(--dpl-corner))`,
+    `linear-gradient(45deg,transparent calc(50% - .6px),var(--dpl-accent) calc(50% - .6px),var(--dpl-accent) calc(50% + .6px),transparent calc(50% + .6px))`,
+  ].join(', '),
+  backgroundPosition: `calc(${LEADER_DIAG_W}px * var(--dps)) 0, 0 0`,
+  backgroundSize: `${LEADER_LINE_W}px 1.2px, ${LEADER_DIAG_W}px ${LEADER_DIAG_W}px`,
+  backgroundRepeat: 'no-repeat',
+})
+
+/** 平行线上的运行中计数块：悬停滑出任务列表，点击进入最新运行会话。 */
+const runOnLineStyle = (): CSSProperties => ({
+  position: 'absolute',
+  top: 'calc(-13px * var(--dps))',
+  right: 'calc(2px * var(--dps))',
   display: 'flex',
   alignItems: 'center',
-  gap: 'calc(6px * var(--dps))',
-  padding: '0 calc(10px * var(--dps)) 0 calc(14px * var(--dps))',
+  gap: 'calc(5px * var(--dps))',
   border: 'none',
   background: 'transparent',
-  color: hasRunning ? 'var(--dpl-fg)' : 'var(--dpl-fg-weak)',
+  color: 'var(--dpl-fg)',
   font: 'inherit',
-  fontWeight: hasRunning ? 500 : 400,
+  fontSize: 'calc(11px * var(--dps))',
+  lineHeight: 'calc(16px * var(--dps))',
+  fontWeight: 500,
   cursor: 'pointer',
+  pointerEvents: 'auto',
 })
 
 /** 运行中黄点：小方块刻度，缩放跟随 --dps；外圈脉冲见 .dp-run-dot。 */
@@ -1320,9 +1352,9 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
   const sinceRef = useRef(0)
   const wrapRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<DragState | null>(null)
-  // 「正在执行」面板的左缘锚点：运行中区块相对胶囊左缘的偏移（每渲染实测）。
+  // 「正在执行」面板的左缘锚点：右上引线组件相对胶囊左缘的偏移（每渲染实测）。
   const [runBlockLeft, setRunBlockLeft] = useState(0)
-  const runBlockRef = useRef<HTMLButtonElement | null>(null)
+  const runBlockRef = useRef<HTMLDivElement | null>(null)
   // 视口高度（resize 时更新）：决定悬停面板朝下还是朝上滑出。
   // 兜底 900：窗口最小化/离屏时 innerHeight 可能是 0，按 0 判会把面板永久
   // 翻到上方（实测在离屏实例里就是这样）。
@@ -1695,7 +1727,7 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
       const deco = Math.round(total - labelEl.getBoundingClientRect().width)
       if (deco > 0 && Math.abs(deco - decoWidth) >= 1) setDecoWidth(deco)
     }
-    // 「正在执行」面板锚点：运行中区块的 offsetLeft（相对 wrap 的 padding box，
+    // 「正在执行」面板锚点：右上引线组件的 offsetLeft（相对 wrap 的 padding box，
     // 即面板 absolute left 所需值）。胶囊宽度动画/内容变化后每渲染实测跟随；
     // 值不变时返回原 state，React bail out，不会死循环。
     const runEl = runBlockRef.current
@@ -1740,32 +1772,6 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
               <LineIcon kind={reminderIcon} size={Math.max(10, Math.round(13 * appearance.scale))} />
               <span>{reminderLabel}</span>
             </span>
-            <span style={pillDividerStyle} aria-hidden />
-          </>
-        )}
-        {/* 左块：正在执行中的任务数量（仅在有任务运行时显示），悬停滑出任务列表 */}
-        {runningSessions.length > 0 && (
-          <>
-            <button
-              ref={runBlockRef}
-              type="button"
-              data-dp-zone="run"
-              style={{ ...runningBlockStyle(true), ...shellChildStyle, cursor: 'inherit' }}
-              aria-label={`正在执行中的任务 ${runningSessions.length} 个；悬停或聚焦查看列表`}
-              title="正在执行中的任务"
-              onMouseEnter={() => { setHoveredRunning(true); setHovered(false) }}
-              onFocus={() => { setHoveredRunning(true); setHovered(false) }}
-              onBlur={() => { setHoveredRunning(false) }}
-              onKeyDown={(event) => {
-                if (event.key !== 'Enter' && event.key !== ' ') return
-                event.preventDefault()
-                const first = runningSessions[0]
-                if (first !== undefined) openSession(first.id)
-              }}
-            >
-              <span className="dp-run-dot" style={runDotStyle} aria-hidden />
-              <span>{runningSessions.length}</span>
-            </button>
             <span style={pillDividerStyle} aria-hidden />
           </>
         )}
@@ -1818,7 +1824,33 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
           </span>
         </button>
       </div>
-      {/* 运行中任务面板：悬停左块时从下方滑出 */}
+      {/* 右上引线：字下面一条线（外壳底边）→ 向右上折的对角线 → 与文字顶部
+          平齐的平行线，平行线上方挂运行中计数块（点击=进入最新运行会话）。 */}
+      <div
+        ref={runBlockRef}
+        style={leaderStyle((shellWidth ?? 160) + 2, Math.round(6 * appearance.scale))}
+      >
+        <button
+          type="button"
+          data-dp-zone="run"
+          style={runOnLineStyle()}
+          aria-label={`正在执行中的任务 ${runningSessions.length} 个；悬停或聚焦查看列表`}
+          title="正在执行中的任务"
+          onMouseEnter={() => { setHoveredRunning(true); setHovered(false) }}
+          onFocus={() => { setHoveredRunning(true); setHovered(false) }}
+          onBlur={() => { setHoveredRunning(false) }}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return
+            event.preventDefault()
+            const first = runningSessions[0]
+            if (first !== undefined) openSession(first.id)
+          }}
+        >
+          <span className="dp-run-dot" style={runDotStyle} aria-hidden />
+          <span>{runningSessions.length}</span>
+        </button>
+      </div>
+      {/* 运行中任务面板：悬停引线上方计数块时从下方滑出 */}
       {/* 面板整体吞掉 pointerdown：不然从面板空白处按下会拖动胶囊（面板随即
           因 setHovered(false) 消失，观感像「点一下面板就跑了」）。 */}
       <div
