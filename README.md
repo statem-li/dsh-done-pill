@@ -59,10 +59,13 @@ GET /api/dsh-done-pill?since=N
 - CSS 类名（`.dsh-done-pill*`）与样式表 id（`dsh-done-pill-css`）沿用
   webui 原值，注入幂等，两边共存无冲突。
 
-与 webui 版的两处差异：① 路由/座位前缀独立（见上）；② **已移除胶囊右侧
+与 webui 版的三处差异：① 路由/座位前缀独立（见上）；② **已移除胶囊右侧
 的「文件」按钮**——它依赖 webui fileExplorer 的跨模块事件桥
 （`dsh-file-explorer-toggle`），独立插件里没有监听者，去掉避免无效入口；
-需要文件入口时用 webui（关掉 donePill 模块）或另行装文件浏览器插件。
+需要文件入口时用 webui（关掉 donePill 模块）或另行装文件浏览器插件；
+③ **视觉风格改为「线条科技感」**——细 1px 描边、青色强调（tech-cyan）、
+圆角收窄（15→9px）、未读扫描光带、运行点脉冲、面板标题能量线；几何骨架、
+拖拽/形变动画节奏与主题令牌机制保持不变。
 
 ## 构建与自测
 

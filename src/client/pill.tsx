@@ -519,39 +519,48 @@ const PILL_STYLE_ID = 'dsh-done-pill-css'
 
 const PILL_CSS = `
 @keyframes dpLineIn{from{opacity:0}to{opacity:1}}
-/* 浅色主题（默认）：白色半透明表面 + 深色文字 + 实体描边与投影。辉光在白底
-   上几乎不可见，形状感必须靠描边 + 投影建立。 */
+/* ── 线条科技感（tech-line）：细 1px 描边 + 青色强调 + 光斑动效 ──
+   浅色主题（默认）：白晶体面 + 青染细线 + 冷灰文字；辉光弱化，形状感靠线。 */
 .dsh-done-pill{
-  --dpl-fg:var(--dsw-alias-label-primary,#0f1115);
-  --dpl-fg-dim:var(--dsw-alias-label-secondary,#61666b);
-  --dpl-fg-weak:var(--dsw-alias-label-tertiary,#81858c);
-  --dpl-accent:var(--dsw-alias-state-business-primary,#4176e6);
-  --dpl-warn:var(--dsw-alias-state-warn-label,#dd8629);
-  --dpl-ok:var(--dsw-alias-state-success-primary,#22c55e);
-  --dpl-surface:rgba(255,255,255,.88);
+  --dpl-fg:#101a24;
+  --dpl-fg-dim:#38485c;
+  --dpl-fg-weak:#7286a0;
+  --dpl-accent:#0e7490;
+  --dpl-warn:#b45309;
+  --dpl-ok:#15803d;
+  --dpl-surface:rgba(242,250,251,.95);
   --dpl-surface-hover:#ffffff;
-  --dpl-border:rgba(15,17,21,.12);
-  --dpl-border-hover:color-mix(in srgb,var(--dpl-accent) 34%,transparent);
-  --dpl-divider:rgba(15,17,21,.10);
-  --dpl-hover:rgba(15,17,21,.06);
-  --dpl-shadow:0 1px 2px rgba(15,17,21,.06),0 4px 14px rgba(15,17,21,.10);
-  --dpl-shadow-hover:0 2px 4px rgba(15,17,21,.08),0 8px 22px rgba(15,17,21,.16),0 0 0 3px color-mix(in srgb,var(--dpl-accent) 12%,transparent);
-  --dpl-panel-bg:var(--dsw-specific-menu,#ffffff);
-  --dpl-panel-border:var(--dsw-alias-border-l2,rgba(0,0,0,.1));
-  --dpl-panel-shadow:0 12px 40px rgba(15,17,21,.16),0 2px 8px rgba(15,17,21,.06);
+  --dpl-border:rgba(6,86,108,.34);
+  --dpl-border-hover:rgba(8,109,134,.62);
+  --dpl-divider:rgba(6,86,108,.20);
+  --dpl-hover:rgba(14,116,144,.08);
+  --dpl-scan:color-mix(in srgb,var(--dpl-accent) 45%,#ffffff);
+  --dpl-shadow:0 1px 2px rgba(16,26,36,.10),0 3px 10px rgba(16,26,36,.12);
+  --dpl-shadow-hover:0 2px 5px rgba(16,26,36,.12),0 6px 18px rgba(14,116,144,.18),0 0 0 3px color-mix(in srgb,var(--dpl-accent) 16%,transparent);
+  --dpl-panel-bg:#ffffff;
+  --dpl-panel-border:rgba(6,86,108,.24);
+  --dpl-panel-shadow:0 12px 40px rgba(16,26,36,.16),0 2px 8px rgba(16,26,36,.06);
 }
-/* 深色主题：回到原来的「浅纱浮层 + 蓝辉光」观感。 */
+/* 深色主题：黑钢面 + 青色细线 + 辉光呼吸，科技仪表观感。 */
 body[data-ds-dark-theme] .dsh-done-pill{
-  --dpl-surface:rgba(255,255,255,.07);
-  --dpl-surface-hover:rgba(255,255,255,.12);
-  --dpl-border:rgba(255,255,255,.14);
-  --dpl-divider:rgba(255,255,255,.14);
-  --dpl-hover:rgba(255,255,255,.12);
-  --dpl-shadow:0 2px 10px rgba(0,0,0,.36);
-  --dpl-shadow-hover:0 4px 18px rgba(0,0,0,.46),0 0 12px color-mix(in srgb,var(--dpl-accent) 30%,transparent);
-  --dpl-panel-bg:var(--dsw-specific-menu,#1b1b1c);
-  --dpl-panel-border:var(--dsw-alias-border-l2,rgba(255,255,255,.12));
-  --dpl-panel-shadow:0 16px 44px rgba(0,0,0,.5);
+  --dpl-fg:#dbe7ee;
+  --dpl-fg-dim:#93a8b5;
+  --dpl-fg-weak:#5d7382;
+  --dpl-accent:#22d3ee;
+  --dpl-warn:#f5b942;
+  --dpl-ok:#31d07c;
+  --dpl-surface:rgba(8,13,19,.92);
+  --dpl-surface-hover:rgba(15,23,32,.96);
+  --dpl-border:rgba(103,232,249,.20);
+  --dpl-border-hover:color-mix(in srgb,var(--dpl-accent) 62%,transparent);
+  --dpl-divider:rgba(103,232,249,.16);
+  --dpl-hover:rgba(34,211,238,.10);
+  --dpl-scan:color-mix(in srgb,var(--dpl-accent) 32%,transparent);
+  --dpl-shadow:0 2px 10px rgba(0,0,0,.45);
+  --dpl-shadow-hover:0 4px 20px rgba(0,0,0,.55),0 0 0 3px color-mix(in srgb,var(--dpl-accent) 12%,transparent),0 0 16px color-mix(in srgb,var(--dpl-accent) 22%,transparent);
+  --dpl-panel-bg:rgba(10,14,19,.97);
+  --dpl-panel-border:rgba(103,232,249,.16);
+  --dpl-panel-shadow:0 16px 44px rgba(0,0,0,.6),0 0 24px color-mix(in srgb,var(--dpl-accent) 10%,transparent);
 }
 /* 外壳：几何由内联样式给，表面/描边/投影/文字色在此（内联写死会盖掉这里）。 */
 .dsh-done-pill-shell{
@@ -565,24 +574,46 @@ body[data-ds-dark-theme] .dsh-done-pill{
   border-color:var(--dpl-border-hover);
   box-shadow:var(--dpl-shadow-hover);
 }
-/* 未读态：文字转主色号 + 加重，描边染一点品牌蓝（不改底色，避免浅色下发灰）。 */
+/* 未读态：文字转主色号 + 加重，描边明显染青（不动底色）。 */
 .dsh-done-pill-shell[data-unread="1"]{
   color:var(--dpl-fg);
   font-weight:500;
-  border-color:color-mix(in srgb,var(--dpl-accent) 30%,var(--dpl-border));
+  border-color:color-mix(in srgb,var(--dpl-accent) 38%,var(--dpl-border));
 }
-/* 拖拽中：保持抬升态，不随指针进出闪烁。 */
+/* 拖拽中：保持抬升态，不随指针进出闪烁；扫描带同步关闭。 */
 .dsh-done-pill-shell[data-dragging="1"]{box-shadow:var(--dpl-shadow-hover)}
-/* 面板内可点行（任务行 / 完成记录卡）：原先无任何 hover 反馈，看不出可点。 */
-.dsh-done-pill-row{transition:background .12s ease}
-.dsh-done-pill-row:hover{background:var(--dpl-hover)}
+.dsh-done-pill-shell[data-dragging="1"]::after{animation:none;opacity:0;transform:none}
+/* 扫描光带：未读时常驻循环、悬停时补扫一遍；拖拽时关闭（见上）。
+   ::after 不参与 flex 布局与宽度测量（度量走 el.children）。 */
+.dsh-done-pill-shell::after{
+  content:'';position:absolute;top:0;bottom:0;left:0;width:38%;
+  pointer-events:none;opacity:0;
+  background:linear-gradient(90deg,transparent,var(--dpl-scan) 50%,transparent);
+  transform:translateX(-140%);will-change:transform,opacity;
+}
+.dsh-done-pill-shell[data-unread="1"]::after{opacity:1;animation:dpScan 3.4s cubic-bezier(.4,0,.2,1) infinite}
+.dsh-done-pill-shell:hover::after{opacity:1}
+@keyframes dpScan{0%{transform:translateX(-140%)}62%{transform:translateX(140%)}100%{transform:translateX(140%)}}
+/* 运行点脉冲：琥珀光点向外扩散一环（科技仪表式的活跃指示）。 */
+.dp-run-dot{animation:dpPulse 1.5s cubic-bezier(.4,0,.6,1) infinite}
+@keyframes dpPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--dpl-warn) 45%,transparent)}100%{box-shadow:0 0 0 6px transparent}}
+/* 面板标题下沿能量线：左侧青色渐变细条（双线叠出仪表感）。 */
+.dsh-done-pill .dp-panel-head{position:relative}
+.dsh-done-pill .dp-panel-head::after{
+  content:'';position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:linear-gradient(90deg,var(--dpl-accent),transparent 72%);
+  border-radius:1px;opacity:.5;pointer-events:none;
+}
+/* 面板内可点行（任务行 / 完成记录卡）：hover 左侧描出青色刻度线。 */
+.dsh-done-pill-row{transition:background .12s ease,box-shadow .12s ease}
+.dsh-done-pill-row:hover{background:var(--dpl-hover);box-shadow:inset 2px 0 0 var(--dpl-accent)}
 .dsh-done-pill-row:focus-visible{outline:2px solid var(--dpl-accent);outline-offset:-2px}
 .dsh-done-pill-close{transition:background .12s ease,color .12s ease}
 .dsh-done-pill-close:hover{background:var(--dpl-hover);color:var(--dpl-fg)}
-/* 面板滚动条跟随主题（默认深色滚动条压在浅色面板上很突兀）。 */
-.dsh-done-pill [role="dialog"]{scrollbar-width:thin;scrollbar-color:var(--dpl-border) transparent}
+/* 面板滚动条：细线 + 青染滑块。 */
+.dsh-done-pill [role="dialog"]{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--dpl-accent) 55%,var(--dpl-border)) transparent}
 .dsh-done-pill [role="dialog"]::-webkit-scrollbar{width:8px}
-.dsh-done-pill [role="dialog"]::-webkit-scrollbar-thumb{background:var(--dpl-border);border-radius:4px}
+.dsh-done-pill [role="dialog"]::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--dpl-accent) 55%,var(--dpl-border));border-radius:4px}
 .dsh-done-pill [role="dialog"]::-webkit-scrollbar-track{background:transparent}
 `
 
@@ -640,12 +671,13 @@ function effectiveShellWidth(target: number | null, el: HTMLDivElement | null): 
  *  boxSizing:border-box：受控 width 已含左右各 1px 描边（见宽度测量 +2）。 */
 const pillShellStyle = (width: number | null): CSSProperties => ({
   boxSizing: 'border-box',
+  position: 'relative', // 扫描光带（::after）的定位上下文
   display: 'flex',
   alignItems: 'stretch',
   height: 'calc(30px * var(--dps))',
   maxWidth: `min(${SHELL_MAX_W}px, calc(100vw - 48px))`,
   ...(width !== null ? { width } : {}),
-  borderRadius: 'calc(15px * var(--dps))',
+  borderRadius: 'calc(9px * var(--dps))',
   fontSize: 'calc(12px * var(--dps))',
   lineHeight: 'calc(18px * var(--dps))',
   whiteSpace: 'nowrap',
@@ -671,20 +703,22 @@ const pillMainStyle: CSSProperties = {
   overflow: 'hidden',
 }
 
-/** ✓ 状态点：未读 = 品牌蓝底白勾；已读 = 中性底绿勾（底色随主题，
- *  原先的 rgba(255,255,255,.10) 在浅色主题下是隐形的白）。 */
+/** ✓ 状态点：线框圆环——未读 = 青环（淡青底 + 青勾）；已读 = 中性细环 + 绿勾。 */
 const checkIconStyle = (unread: number): CSSProperties => ({
   flex: 'none',
   width: 'calc(15px * var(--dps))',
   height: 'calc(15px * var(--dps))',
   borderRadius: '50%',
+  boxSizing: 'border-box',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
   fontSize: 'calc(10px * var(--dps))',
   lineHeight: 1,
-  background: unread > 0 ? 'var(--dpl-accent)' : 'var(--dpl-hover)',
-  color: unread > 0 ? '#ffffff' : 'var(--dpl-ok)',
+  border: `calc(1.5px * var(--dps)) solid ${unread > 0 ? 'var(--dpl-accent)' : 'var(--dpl-border)'}`,
+  background: unread > 0 ? 'color-mix(in srgb, var(--dpl-accent) 14%, transparent)' : 'transparent',
+  color: unread > 0 ? 'var(--dpl-accent)' : 'var(--dpl-ok)',
+  transition: 'border-color .15s ease, background-color .15s ease, color .15s ease',
 })
 
 /** 健康提醒态图标（月亮 / 咖啡）：单色 SVG。 */
@@ -899,6 +933,7 @@ const headTitleStyle: CSSProperties = {
   flex: 'none',
   fontSize: 13,
   fontWeight: 600,
+  letterSpacing: '.06em',
   color: 'var(--dpl-fg)',
 }
 
@@ -931,12 +966,15 @@ const cardHeadStyle: CSSProperties = {
   minWidth: 0,
 }
 
+/** 卡片内未读点：线框青环（与 ✓ 状态点同一线条语言）。 */
 const unreadDotStyle: CSSProperties = {
   flex: 'none',
-  width: 8,
-  height: 8,
+  width: 9,
+  height: 9,
+  boxSizing: 'border-box',
   borderRadius: '50%',
-  background: 'var(--dpl-accent)',
+  border: '2px solid var(--dpl-accent)',
+  background: 'transparent',
 }
 
 const sessionTitleStyle: CSSProperties = {
@@ -1713,7 +1751,7 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
                 if (first !== undefined) openSession(first.id)
               }}
             >
-              <span style={runDotStyle} aria-hidden />
+              <span className="dp-run-dot" style={runDotStyle} aria-hidden />
               <span>{runningSessions.length}</span>
             </button>
             <span style={pillDividerStyle} aria-hidden />
@@ -1778,7 +1816,7 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
         aria-hidden={!hoveredRunning}
         onPointerDown={(event) => { event.stopPropagation() }}
       >
-        <div style={headStyle}>
+        <div className="dp-panel-head" style={headStyle}>
           <span style={headTitleStyle}>正在执行中</span>
           <span style={headMetaStyle}>{`${runningSessions.length} 个任务 · 点击进入会话`}</span>
         </div>
@@ -1818,7 +1856,7 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
         aria-hidden={!hovered}
         onPointerDown={(event) => { event.stopPropagation() }}
       >
-        <div style={headStyle}>
+        <div className="dp-panel-head" style={headStyle}>
           <span style={headTitleStyle}>对话完成记录</span>
           <span style={headMetaStyle}>{`${entries.length} 条 · 点击卡片进入会话`}</span>
         </div>
