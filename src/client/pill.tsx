@@ -615,11 +615,21 @@ body[data-ds-dark-theme] .dsh-done-pill{
 .dsh-done-pill-row:focus-visible{outline:2px solid var(--dpl-accent);outline-offset:-2px}
 .dsh-done-pill-close{transition:background .12s ease,color .12s ease}
 .dsh-done-pill-close:hover{background:var(--dpl-hover);color:var(--dpl-fg)}
-/* 面板滚动条：最细细条（3px，无轨道），青染滑块。 */
-.dsh-done-pill [role="dialog"]{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--dpl-accent) 45%,var(--dpl-border)) transparent}
-.dsh-done-pill [role="dialog"]::-webkit-scrollbar{width:3px;height:3px}
-.dsh-done-pill [role="dialog"]::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--dpl-accent) 45%,var(--dpl-border));border-radius:1.5px}
-.dsh-done-pill [role="dialog"]::-webkit-scrollbar-track{background:transparent}
+/* 面板滚动条：最细细条（3px、无轨道、无上下箭头按钮）——作用于面板本身
+   与内部所有可滚动元素（记录卡内的 <pre> 全文等）。 */
+.dsh-done-pill [role="dialog"],
+.dsh-done-pill [role="dialog"] *{
+  scrollbar-width:thin;
+  scrollbar-color:color-mix(in srgb,var(--dpl-accent) 45%,var(--dpl-border)) transparent;
+}
+.dsh-done-pill [role="dialog"]::-webkit-scrollbar,
+.dsh-done-pill [role="dialog"] *::-webkit-scrollbar{width:3px;height:3px}
+.dsh-done-pill [role="dialog"]::-webkit-scrollbar-thumb,
+.dsh-done-pill [role="dialog"] *::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--dpl-accent) 45%,var(--dpl-border));border-radius:1.5px}
+.dsh-done-pill [role="dialog"]::-webkit-scrollbar-track,
+.dsh-done-pill [role="dialog"] *::-webkit-scrollbar-track{background:transparent}
+.dsh-done-pill [role="dialog"]::-webkit-scrollbar-button,
+.dsh-done-pill [role="dialog"] *::-webkit-scrollbar-button{display:none;height:0;width:0}
 `
 
 // ---- 样式（配色跟随主题：颜色全部走 .dsh-done-pill 上的 --dpl-* 变量 +
