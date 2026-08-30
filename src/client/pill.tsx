@@ -869,13 +869,15 @@ const runPanelStyle = (open: boolean, shiftX: number, up: boolean): CSSPropertie
 /**
  * 右上引线组件（HUD 标注式）：
  *  - 外壳底边 = 「字下面一条线条」；
- *  - 从底边右端向右上折一条对角线（leader 左 24px 区域，45°）；
- *  - 对角线上端接一段平行线（leader 右 32px 区域），高度 = 文字顶部；
+ *  - 起点压进底边右端 2px（保证接得上），沿 135° 斜向上（/ 方向，实测
+ *    linear-gradient 135deg 的色带才是左下→右上，45deg 是反的 \）；
+ *  - 对角线上端与平行线左端重叠 2px 后向右延展（高度 = 文字顶部）；
  *  - 平行线上方挂运行中计数块（点击进入最新运行会话）。
  * 绝对定位在 wrap 内（不动 shell flex 布局，宽度测量不受影响）。
  */
 const LEADER_DIAG_W = 24
-const LEADER_LINE_W = 32
+const LEADER_LINE_W = 36
+const LEADER_OVERLAP = 2
 
 const leaderStyle = (left: number, top: number): CSSProperties => ({
   position: 'absolute',
@@ -885,12 +887,12 @@ const leaderStyle = (left: number, top: number): CSSProperties => ({
   height: 'calc(24px * var(--dps))',
   pointerEvents: 'none',
   zIndex: 1,
-  // 右段：平行线（与文字顶部平齐）；左段：45° 对角线（底左 → 顶右）。
+  // 右段：平行线（与文字顶部平齐）；左段：135° 对角线（底左 → 顶右，/ 方向）。
   backgroundImage: [
     `linear-gradient(var(--dpl-corner),var(--dpl-corner))`,
-    `linear-gradient(45deg,transparent calc(50% - .6px),var(--dpl-accent) calc(50% - .6px),var(--dpl-accent) calc(50% + .6px),transparent calc(50% + .6px))`,
+    `linear-gradient(135deg,transparent calc(50% - .6px),var(--dpl-accent) calc(50% - .6px),var(--dpl-accent) calc(50% + .6px),transparent calc(50% + .6px))`,
   ].join(', '),
-  backgroundPosition: `calc(${LEADER_DIAG_W}px * var(--dps)) 0, 0 0`,
+  backgroundPosition: `calc(${LEADER_DIAG_W - LEADER_OVERLAP}px * var(--dps)) 0, 0 0`,
   backgroundSize: `${LEADER_LINE_W}px 1.2px, ${LEADER_DIAG_W}px ${LEADER_DIAG_W}px`,
   backgroundRepeat: 'no-repeat',
 })
@@ -1828,7 +1830,7 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
           平齐的平行线，平行线上方挂运行中计数块（点击=进入最新运行会话）。 */}
       <div
         ref={runBlockRef}
-        style={leaderStyle((shellWidth ?? 160) + 2, Math.round(6 * appearance.scale))}
+        style={leaderStyle((shellWidth ?? 160) - LEADER_OVERLAP, Math.round(6 * appearance.scale))}
       >
         <button
           type="button"
