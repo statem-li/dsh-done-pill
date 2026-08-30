@@ -528,6 +528,7 @@ const PILL_CSS = `
   --dpl-accent:#0e7490;
   --dpl-warn:#b45309;
   --dpl-ok:#15803d;
+  --dpl-corner:color-mix(in srgb,var(--dpl-accent) 62%,#ffffff);
   --dpl-border:rgba(6,86,108,.34);
   --dpl-divider:rgba(6,86,108,.20);
   --dpl-hover:rgba(14,116,144,.08);
@@ -553,9 +554,30 @@ body[data-ds-dark-theme] .dsh-done-pill{
   --dpl-panel-border:rgba(103,232,249,.16);
   --dpl-panel-shadow:0 16px 44px rgba(0,0,0,.6),0 0 24px color-mix(in srgb,var(--dpl-accent) 10%,transparent);
 }
-/* 外壳：裸布局壳（无框无线）——主文字不再被矩形围绕，也没有引线装饰；
-   hover/未读只通过文字增强与扫描光带表达。几何仍由内联样式给。 */
+/* 外壳：四角不规则角标（用户指定：四角线条、不规则）——四角长度各不同，
+   右下再补一段 45° 斜杠（参考图「////」风味）；无填充面、无四边描边。 */
 .dsh-done-pill-shell{
+  background:
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 0,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 0,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 0,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 0,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 100%,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 100%,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 100%,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 100%,
+    linear-gradient(135deg,transparent calc(50% - .6px),var(--dpl-corner) calc(50% - .6px),var(--dpl-corner) calc(50% + .6px),transparent calc(50% + .6px)) 100% 100%;
+  background-size:
+    calc(14px * var(--dps)) calc(2px * var(--dps)),
+    calc(2px * var(--dps)) calc(12px * var(--dps)),
+    calc(10px * var(--dps)) calc(2px * var(--dps)),
+    calc(2px * var(--dps)) calc(16px * var(--dps)),
+    calc(12px * var(--dps)) calc(2px * var(--dps)),
+    calc(2px * var(--dps)) calc(10px * var(--dps)),
+    calc(16px * var(--dps)) calc(2px * var(--dps)),
+    calc(2px * var(--dps)) calc(8px * var(--dps)),
+    calc(12px * var(--dps)) calc(12px * var(--dps));
+  background-repeat:no-repeat;
   color:var(--dpl-fg-dim);
 }
 .dsh-done-pill-shell:hover{
@@ -1654,7 +1676,7 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
     if (el === null) return
     let total = 0
     for (const child of el.children) total += child.getBoundingClientRect().width
-    total += 2 // 左右 border 各 1px（受控 width 需包含边框占位）
+    // 无边框（只有角标，角标不影响布局），无需再加 border 占位。
     if (total > 0 && Math.round(total) !== shellWidthRef.current) {
       shellWidthRef.current = Math.round(total)
       setShellWidth(Math.round(total))
