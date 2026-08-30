@@ -528,6 +528,7 @@ const PILL_CSS = `
   --dpl-accent:#0e7490;
   --dpl-warn:#b45309;
   --dpl-ok:#15803d;
+  --dpl-corner:color-mix(in srgb,var(--dpl-accent) 62%,#ffffff);
   --dpl-surface:rgba(242,250,251,.95);
   --dpl-surface-hover:#ffffff;
   --dpl-border:rgba(6,86,108,.34);
@@ -555,6 +556,7 @@ body[data-ds-dark-theme] .dsh-done-pill{
   --dpl-border-hover:color-mix(in srgb,var(--dpl-accent) 62%,transparent);
   --dpl-divider:rgba(103,232,249,.16);
   --dpl-hover:rgba(34,211,238,.10);
+  --dpl-corner:color-mix(in srgb,var(--dpl-accent) 62%,#ffffff);
   --dpl-scan:color-mix(in srgb,var(--dpl-accent) 32%,transparent);
   --dpl-shadow:0 2px 10px rgba(0,0,0,.45);
   --dpl-shadow-hover:0 4px 20px rgba(0,0,0,.55),0 0 0 3px color-mix(in srgb,var(--dpl-accent) 12%,transparent),0 0 16px color-mix(in srgb,var(--dpl-accent) 22%,transparent);
@@ -562,12 +564,25 @@ body[data-ds-dark-theme] .dsh-done-pill{
   --dpl-panel-border:rgba(103,232,249,.16);
   --dpl-panel-shadow:0 16px 44px rgba(0,0,0,.6),0 0 24px color-mix(in srgb,var(--dpl-accent) 10%,transparent);
 }
-/* 外壳：几何由内联样式给，表面/描边/投影/文字色在此（内联写死会盖掉这里）。 */
+/* 外壳：几何由内联样式给，表面/描边/投影/文字色在此（内联写死会盖掉这里）。
+   HUD 线条感：左上 + 右下两对角框括标（layered backgrounds，不新增元素、
+   不影响宽度测量），底部一条虚线连接轨（::before）。 */
 .dsh-done-pill-shell{
   border:1px solid var(--dpl-border);
-  background:var(--dpl-surface);
+  background:
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 0,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 0,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 100%,
+    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 100%,
+    var(--dpl-surface);
+  background-size:12px 2px,2px 12px,12px 2px,2px 12px,auto;
+  background-repeat:no-repeat;
   color:var(--dpl-fg-dim);
   box-shadow:var(--dpl-shadow);
+}
+.dsh-done-pill-shell::before{
+  content:'';position:absolute;left:10px;right:10px;bottom:-4px;
+  border-top:1px dashed var(--dpl-border);opacity:.7;pointer-events:none;
 }
 .dsh-done-pill-shell:hover{
   background:var(--dpl-surface-hover);
@@ -597,12 +612,12 @@ body[data-ds-dark-theme] .dsh-done-pill{
 /* 运行点脉冲：琥珀光点向外扩散一环（科技仪表式的活跃指示）。 */
 .dp-run-dot{animation:dpPulse 1.5s cubic-bezier(.4,0,.6,1) infinite}
 @keyframes dpPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--dpl-warn) 45%,transparent)}100%{box-shadow:0 0 0 6px transparent}}
-/* 面板标题下沿能量线：左侧青色渐变细条（双线叠出仪表感）。 */
+/* 面板标题下沿刻度轨：青点虚线（HUD 分段线语言）。 */
 .dsh-done-pill .dp-panel-head{position:relative}
 .dsh-done-pill .dp-panel-head::after{
-  content:'';position:absolute;left:0;right:0;bottom:0;height:2px;
-  background:linear-gradient(90deg,var(--dpl-accent),transparent 72%);
-  border-radius:1px;opacity:.5;pointer-events:none;
+  content:'';position:absolute;left:0;right:0;bottom:0;height:1px;
+  background:repeating-linear-gradient(90deg,var(--dpl-accent) 0 6px,transparent 6px 12px);
+  opacity:.45;pointer-events:none;
 }
 /* 面板内可点行（任务行 / 完成记录卡）：hover 左侧描出青色刻度线。 */
 .dsh-done-pill-row{transition:background .12s ease,box-shadow .12s ease}
@@ -677,7 +692,7 @@ const pillShellStyle = (width: number | null): CSSProperties => ({
   height: 'calc(30px * var(--dps))',
   maxWidth: `min(${SHELL_MAX_W}px, calc(100vw - 48px))`,
   ...(width !== null ? { width } : {}),
-  borderRadius: 'calc(9px * var(--dps))',
+  borderRadius: 'calc(4px * var(--dps))',
   fontSize: 'calc(12px * var(--dps))',
   lineHeight: 'calc(18px * var(--dps))',
   whiteSpace: 'nowrap',
@@ -703,12 +718,12 @@ const pillMainStyle: CSSProperties = {
   overflow: 'hidden',
 }
 
-/** ✓ 状态点：线框圆环——未读 = 青环（淡青底 + 青勾）；已读 = 中性细环 + 绿勾。 */
+/** ✓ 状态点：角框标记——未读 = 青框（淡青底 + 青勾）；已读 = 中性细框 + 绿勾。 */
 const checkIconStyle = (unread: number): CSSProperties => ({
   flex: 'none',
   width: 'calc(15px * var(--dps))',
   height: 'calc(15px * var(--dps))',
-  borderRadius: '50%',
+  borderRadius: 'calc(4px * var(--dps))',
   boxSizing: 'border-box',
   display: 'inline-flex',
   alignItems: 'center',
@@ -831,7 +846,7 @@ const floatPanelStyle = (
   flexDirection: 'column',
   gap,
   padding,
-  borderRadius: 12,
+  borderRadius: 8,
   border: '1px solid var(--dpl-panel-border)',
   background: 'var(--dpl-panel-bg)',
   color: 'var(--dpl-fg)',
@@ -869,22 +884,21 @@ const runningBlockStyle = (hasRunning: boolean): CSSProperties => ({
   cursor: 'pointer',
 })
 
-/** 运行中黄点：缩放跟随 --dps（原先写死 8px，胶囊放大到 160% 时点显得干瘪）。 */
+/** 运行中黄点：小方块刻度，缩放跟随 --dps；外圈脉冲见 .dp-run-dot。 */
 const runDotStyle: CSSProperties = {
   flex: 'none',
-  width: 'calc(8px * var(--dps))',
-  height: 'calc(8px * var(--dps))',
-  borderRadius: '50%',
+  width: 'calc(7px * var(--dps))',
+  height: 'calc(7px * var(--dps))',
+  borderRadius: 'calc(1.5px * var(--dps))',
   background: 'var(--dpl-warn)',
-  boxShadow: '0 0 6px color-mix(in srgb, var(--dpl-warn) 55%, transparent)',
 }
 
-/** 面板内列表项的黄点：面板不参与胶囊缩放，固定 8px。 */
+/** 面板内列表项的黄点：面板不参与胶囊缩放，固定 7px 小方块刻度。 */
 const panelDotStyle: CSSProperties = {
   flex: 'none',
-  width: 8,
-  height: 8,
-  borderRadius: '50%',
+  width: 7,
+  height: 7,
+  borderRadius: 1.5,
   background: 'var(--dpl-warn)',
 }
 
@@ -894,7 +908,7 @@ const runRowStyle: CSSProperties = {
   gap: 8,
   width: '100%',
   padding: '7px 8px',
-  borderRadius: 8,
+  borderRadius: 6,
   border: 'none',
   background: 'transparent',
   color: 'var(--dpl-fg)',
@@ -926,7 +940,7 @@ const headStyle: CSSProperties = {
   justifyContent: 'space-between',
   gap: 8,
   padding: '2px 2px 6px',
-  borderBottom: '1px solid var(--dpl-panel-border)',
+  // 下沿刻度轨改由 .dp-panel-head::after（青色点虚线）提供，不再画实线。
 }
 
 const headTitleStyle: CSSProperties = {
@@ -950,7 +964,7 @@ const headMetaStyle: CSSProperties = {
 
 const cardStyle: CSSProperties = {
   border: 'none',
-  borderRadius: 12,
+  borderRadius: 8,
   padding: '10px 12px',
   display: 'flex',
   flexDirection: 'column',
@@ -966,14 +980,14 @@ const cardHeadStyle: CSSProperties = {
   minWidth: 0,
 }
 
-/** 卡片内未读点：线框青环（与 ✓ 状态点同一线条语言）。 */
+/** 卡片内未读点：角框青标记（与 ✓ 状态点同一 HUD 语言）。 */
 const unreadDotStyle: CSSProperties = {
   flex: 'none',
-  width: 9,
-  height: 9,
+  width: 7,
+  height: 7,
   boxSizing: 'border-box',
-  borderRadius: '50%',
-  border: '2px solid var(--dpl-accent)',
+  borderRadius: 2,
+  border: '1.5px solid var(--dpl-accent)',
   background: 'transparent',
 }
 
