@@ -520,7 +520,7 @@ const PILL_STYLE_ID = 'dsh-done-pill-css'
 const PILL_CSS = `
 @keyframes dpLineIn{from{opacity:0}to{opacity:1}}
 /* ── 线条科技感（tech-line）：细 1px 描边 + 青色强调 + 光斑动效 ──
-   浅色主题（默认）：全透明底 + 青染细线，形状感纯靠线条（无填充面）。 */
+   浅色主题（默认）：全透明底，只有文字与状态件（无框无线，浮在页面上）。 */
 .dsh-done-pill{
   --dpl-fg:#101a24;
   --dpl-fg-dim:#38485c;
@@ -528,21 +528,16 @@ const PILL_CSS = `
   --dpl-accent:#0e7490;
   --dpl-warn:#b45309;
   --dpl-ok:#15803d;
-  --dpl-corner:color-mix(in srgb,var(--dpl-accent) 62%,#ffffff);
-  --dpl-surface:transparent;
-  --dpl-surface-hover:transparent;
   --dpl-border:rgba(6,86,108,.34);
-  --dpl-border-hover:rgba(8,109,134,.62);
   --dpl-divider:rgba(6,86,108,.20);
   --dpl-hover:rgba(14,116,144,.08);
   --dpl-scan:color-mix(in srgb,var(--dpl-accent) 45%,#ffffff);
-  --dpl-shadow-hover:0 2px 5px rgba(16,26,36,.12),0 6px 18px rgba(14,116,144,.18),0 0 0 3px color-mix(in srgb,var(--dpl-accent) 16%,transparent);
   --dpl-panel-bg:#ffffff;
   --dpl-panel-border:rgba(6,86,108,.24);
   --dpl-panel-shadow:0 12px 40px rgba(16,26,36,.16),0 2px 8px rgba(16,26,36,.06);
 }
-/* 深色主题：全透明底 + 发光细线 + 辉光呼吸，HUD 仪表观感（无填充面，
-   直接浮在页面背景上，同参考图）。 */
+/* 深色主题：全透明底 + 青色强调，只留文字与状态件（无框无线，
+   直接浮在页面背景上）。 */
 body[data-ds-dark-theme] .dsh-done-pill{
   --dpl-fg:#dbe7ee;
   --dpl-fg-dim:#93a8b5;
@@ -550,50 +545,28 @@ body[data-ds-dark-theme] .dsh-done-pill{
   --dpl-accent:#22d3ee;
   --dpl-warn:#f5b942;
   --dpl-ok:#31d07c;
-  --dpl-surface:transparent;
-  --dpl-surface-hover:transparent;
   --dpl-border:rgba(103,232,249,.20);
-  --dpl-border-hover:color-mix(in srgb,var(--dpl-accent) 62%,transparent);
   --dpl-divider:rgba(103,232,249,.16);
   --dpl-hover:rgba(34,211,238,.10);
-  --dpl-corner:color-mix(in srgb,var(--dpl-accent) 62%,#ffffff);
   --dpl-scan:color-mix(in srgb,var(--dpl-accent) 32%,transparent);
-  --dpl-shadow-hover:0 4px 20px rgba(0,0,0,.55),0 0 0 3px color-mix(in srgb,var(--dpl-accent) 12%,transparent),0 0 16px color-mix(in srgb,var(--dpl-accent) 22%,transparent);
   --dpl-panel-bg:rgba(10,14,19,.97);
   --dpl-panel-border:rgba(103,232,249,.16);
   --dpl-panel-shadow:0 16px 44px rgba(0,0,0,.6),0 0 24px color-mix(in srgb,var(--dpl-accent) 10%,transparent);
 }
-/* 外壳：几何由内联样式给，描边/文字色在此（全透明无填充面）。
-   HUD 线条感：左上 + 右下两对角框括标（layered backgrounds，不新增元素、
-   不影响宽度测量）；「字下面一条线」= 外壳底边描边，右上引线（对角线 +
-   平行线 + 运行中计数）为独立组件（见 leaderStyle / runOnLineStyle）。 */
+/* 外壳：裸布局壳（无框无线）——主文字不再被矩形围绕，也没有引线装饰；
+   hover/未读只通过文字增强与扫描光带表达。几何仍由内联样式给。 */
 .dsh-done-pill-shell{
-  border:1px solid var(--dpl-border);
-  background:
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 0,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 0,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 100%,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 100%,
-    var(--dpl-surface);
-  background-size:12px 2px,2px 12px,12px 2px,2px 12px,auto;
-  background-repeat:no-repeat;
   color:var(--dpl-fg-dim);
 }
-.dsh-done-pill-shell::before{content:'';position:absolute;left:10px;right:10px;bottom:-4px;border-top:1px dashed var(--dpl-border);opacity:0;pointer-events:none}
-.dsh-done-pill-shell:hover::before{opacity:.7}
 .dsh-done-pill-shell:hover{
-  background:var(--dpl-surface-hover);
-  border-color:var(--dpl-border-hover);
-  box-shadow:var(--dpl-shadow-hover);
+  color:var(--dpl-fg);
 }
-/* 未读态：文字转主色号 + 加重，描边明显染青（不动底色）。 */
+/* 未读态：文字转主色号 + 加重。 */
 .dsh-done-pill-shell[data-unread="1"]{
   color:var(--dpl-fg);
   font-weight:500;
-  border-color:color-mix(in srgb,var(--dpl-accent) 38%,var(--dpl-border));
 }
-/* 拖拽中：保持抬升态，不随指针进出闪烁；扫描带同步关闭。 */
-.dsh-done-pill-shell[data-dragging="1"]{box-shadow:var(--dpl-shadow-hover)}
+/* 拖拽中：扫描带关闭。 */
 .dsh-done-pill-shell[data-dragging="1"]::after{animation:none;opacity:0;transform:none}
 /* 扫描光带：未读时常驻循环、悬停时补扫一遍；拖拽时关闭（见上）。
    ::after 不参与 flex 布局与宽度测量（度量走 el.children）。 */
@@ -866,54 +839,19 @@ const panelStyle = (open: boolean, shiftX: number, up: boolean): CSSProperties =
 const runPanelStyle = (open: boolean, shiftX: number, up: boolean): CSSProperties =>
   floatPanelStyle(open, shiftX, up, RUN_PANEL_W, 'min(60vh, 480px)', 4, 10)
 
-/**
- * 右上引线组件（HUD 标注式）：
- *  - 外壳底边 = 「字下面一条线条」；
- *  - 起点压进底边右端 2px（保证接得上），沿 135° 斜向上（/ 方向，实测
- *    linear-gradient 135deg 的色带才是左下→右上，45deg 是反的 \）；
- *  - 对角线上端与平行线左端重叠 2px 后向右延展（高度 = 文字顶部）；
- *  - 平行线上方挂运行中计数块（点击进入最新运行会话）。
- * 绝对定位在 wrap 内（不动 shell flex 布局，宽度测量不受影响）。
- */
-const LEADER_DIAG_W = 24
-const LEADER_LINE_W = 36
-const LEADER_OVERLAP = 2
-
-const leaderStyle = (left: number, top: number): CSSProperties => ({
-  position: 'absolute',
-  left: Math.round(left),
-  top: Math.round(top),
-  width: `calc(${LEADER_DIAG_W + LEADER_LINE_W}px * var(--dps))`,
-  height: 'calc(24px * var(--dps))',
-  pointerEvents: 'none',
-  zIndex: 1,
-  // 右段：平行线（与文字顶部平齐）；左段：135° 对角线（底左 → 顶右，/ 方向）。
-  backgroundImage: [
-    `linear-gradient(var(--dpl-corner),var(--dpl-corner))`,
-    `linear-gradient(135deg,transparent calc(50% - .6px),var(--dpl-accent) calc(50% - .6px),var(--dpl-accent) calc(50% + .6px),transparent calc(50% + .6px))`,
-  ].join(', '),
-  backgroundPosition: `calc(${LEADER_DIAG_W - LEADER_OVERLAP}px * var(--dps)) 0, 0 0`,
-  backgroundSize: `${LEADER_LINE_W}px 1.2px, ${LEADER_DIAG_W}px ${LEADER_DIAG_W}px`,
-  backgroundRepeat: 'no-repeat',
-})
-
-/** 平行线上的运行中计数块：悬停滑出任务列表，点击进入最新运行会话。 */
-const runOnLineStyle = (): CSSProperties => ({
-  position: 'absolute',
-  top: 'calc(-13px * var(--dps))',
-  right: 'calc(2px * var(--dps))',
+/** 胶囊左侧「运行中」区块：黄点 + 数量，悬停滑出任务列表。 */
+const runningBlockStyle = (hasRunning: boolean): CSSProperties => ({
+  flex: 'none',
   display: 'flex',
   alignItems: 'center',
-  gap: 'calc(5px * var(--dps))',
+  gap: 'calc(6px * var(--dps))',
+  padding: '0 calc(10px * var(--dps)) 0 calc(14px * var(--dps))',
   border: 'none',
   background: 'transparent',
-  color: 'var(--dpl-fg)',
+  color: hasRunning ? 'var(--dpl-fg)' : 'var(--dpl-fg-weak)',
   font: 'inherit',
-  fontSize: 'calc(11px * var(--dps))',
-  lineHeight: 'calc(16px * var(--dps))',
-  fontWeight: 500,
+  fontWeight: hasRunning ? 500 : 400,
   cursor: 'pointer',
-  pointerEvents: 'auto',
 })
 
 /** 运行中黄点：小方块刻度，缩放跟随 --dps；外圈脉冲见 .dp-run-dot。 */
@@ -1354,9 +1292,9 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
   const sinceRef = useRef(0)
   const wrapRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<DragState | null>(null)
-  // 「正在执行」面板的左缘锚点：右上引线组件相对胶囊左缘的偏移（每渲染实测）。
+  // 「正在执行」面板的左缘锚点：左侧运行中区块相对胶囊左缘的偏移（每渲染实测）。
   const [runBlockLeft, setRunBlockLeft] = useState(0)
-  const runBlockRef = useRef<HTMLDivElement | null>(null)
+  const runBlockRef = useRef<HTMLButtonElement | null>(null)
   // 视口高度（resize 时更新）：决定悬停面板朝下还是朝上滑出。
   // 兜底 900：窗口最小化/离屏时 innerHeight 可能是 0，按 0 判会把面板永久
   // 翻到上方（实测在离屏实例里就是这样）。
@@ -1729,7 +1667,7 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
       const deco = Math.round(total - labelEl.getBoundingClientRect().width)
       if (deco > 0 && Math.abs(deco - decoWidth) >= 1) setDecoWidth(deco)
     }
-    // 「正在执行」面板锚点：右上引线组件的 offsetLeft（相对 wrap 的 padding box，
+    // 「正在执行」面板锚点：左侧运行中区块的 offsetLeft（相对 wrap 的 padding box，
     // 即面板 absolute left 所需值）。胶囊宽度动画/内容变化后每渲染实测跟随；
     // 值不变时返回原 state，React bail out，不会死循环。
     const runEl = runBlockRef.current
@@ -1774,6 +1712,32 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
               <LineIcon kind={reminderIcon} size={Math.max(10, Math.round(13 * appearance.scale))} />
               <span>{reminderLabel}</span>
             </span>
+            <span style={pillDividerStyle} aria-hidden />
+          </>
+        )}
+        {/* 左块：正在执行中的任务数量（仅在有任务运行时显示），悬停滑出任务列表 */}
+        {runningSessions.length > 0 && (
+          <>
+            <button
+              ref={runBlockRef}
+              type="button"
+              data-dp-zone="run"
+              style={{ ...runningBlockStyle(true), ...shellChildStyle, cursor: 'inherit' }}
+              aria-label={`正在执行中的任务 ${runningSessions.length} 个；悬停或聚焦查看列表`}
+              title="正在执行中的任务"
+              onMouseEnter={() => { setHoveredRunning(true); setHovered(false) }}
+              onFocus={() => { setHoveredRunning(true); setHovered(false) }}
+              onBlur={() => { setHoveredRunning(false) }}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return
+                event.preventDefault()
+                const first = runningSessions[0]
+                if (first !== undefined) openSession(first.id)
+              }}
+            >
+              <span className="dp-run-dot" style={runDotStyle} aria-hidden />
+              <span>{runningSessions.length}</span>
+            </button>
             <span style={pillDividerStyle} aria-hidden />
           </>
         )}
@@ -1826,33 +1790,7 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
           </span>
         </button>
       </div>
-      {/* 右上引线：字下面一条线（外壳底边）→ 向右上折的对角线 → 与文字顶部
-          平齐的平行线，平行线上方挂运行中计数块（点击=进入最新运行会话）。 */}
-      <div
-        ref={runBlockRef}
-        style={leaderStyle((shellWidth ?? 160) - LEADER_OVERLAP, Math.round(6 * appearance.scale))}
-      >
-        <button
-          type="button"
-          data-dp-zone="run"
-          style={runOnLineStyle()}
-          aria-label={`正在执行中的任务 ${runningSessions.length} 个；悬停或聚焦查看列表`}
-          title="正在执行中的任务"
-          onMouseEnter={() => { setHoveredRunning(true); setHovered(false) }}
-          onFocus={() => { setHoveredRunning(true); setHovered(false) }}
-          onBlur={() => { setHoveredRunning(false) }}
-          onKeyDown={(event) => {
-            if (event.key !== 'Enter' && event.key !== ' ') return
-            event.preventDefault()
-            const first = runningSessions[0]
-            if (first !== undefined) openSession(first.id)
-          }}
-        >
-          <span className="dp-run-dot" style={runDotStyle} aria-hidden />
-          <span>{runningSessions.length}</span>
-        </button>
-      </div>
-      {/* 运行中任务面板：悬停引线上方计数块时从下方滑出 */}
+      {/* 运行中任务面板：悬停左侧计数块时从下方滑出 */}
       {/* 面板整体吞掉 pointerdown：不然从面板空白处按下会拖动胶囊（面板随即
           因 setHovered(false) 消失，观感像「点一下面板就跑了」）。 */}
       <div
