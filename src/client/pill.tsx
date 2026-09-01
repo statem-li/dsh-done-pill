@@ -154,9 +154,9 @@ function saveAnchor(anchor: PillAnchor): void {
   try { localStorage.setItem(POS_KEY, JSON.stringify(anchor)) } catch { /* 忽略 */ }
 }
 
-/** 胶囊外壳基准高度（px）：与 pillShellStyle 的 height 同源，复刻参考稿
- *  （54px 高、全圆角、15px 文字）的 1:1 比例。 */
-const PILL_H = 54
+/** 胶囊外壳基准高度（px）：与 pillShellStyle 的 height 同源。v0.2.1 起
+ *  按用户反馈收矮（54→46）、圆角从全圆改 18px 圆角矩形（太圆了）。 */
+const PILL_H = 46
 
 function pillHeight(scale: number): number {
   return Math.max(1, Math.round(PILL_H * scale))
@@ -607,9 +607,19 @@ body[data-ds-dark-theme] .dsh-done-pill-shell{
 .dsh-done-pill-shell[data-unread="1"]::after{opacity:1;animation:dpScan 3.4s cubic-bezier(.4,0,.2,1) infinite}
 .dsh-done-pill-shell:hover::after{opacity:1}
 @keyframes dpScan{0%{transform:translateX(-140%)}62%{transform:translateX(140%)}100%{transform:translateX(140%)}}
-/* 运行点脉冲：蓝点向外扩散一环。 */
-.dp-run-dot{animation:dpPulse 1.5s cubic-bezier(.4,0,.6,1) infinite}
-@keyframes dpPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--dpl-accent) 40%,transparent)}100%{box-shadow:0 0 0 7px transparent}}
+/* 运行中指示（华为星环）：细圆环 + 一枚发光卫星点绕环旋转（1.2s/圈，
+   光晕随动），替换旧版 9px 静止蓝点。 */
+.dp-run-orb{position:relative;flex:none;width:calc(17px * var(--dps));height:calc(17px * var(--dps));border-radius:50%}
+.dp-run-ring{position:absolute;inset:0;border-radius:50%;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--dpl-accent) 32%,transparent)}
+.dp-run-orbit{position:absolute;inset:0;animation:dpOrbit 1.2s linear infinite;will-change:transform}
+.dp-run-sat{
+  position:absolute;top:calc(-1px * var(--dps));left:50%;
+  width:calc(4.5px * var(--dps));height:calc(4.5px * var(--dps));
+  margin-left:calc(-2.25px * var(--dps));border-radius:50%;
+  background:var(--dpl-accent);
+  box-shadow:0 0 calc(6px * var(--dps)) color-mix(in srgb,var(--dpl-accent) 65%,transparent);
+}
+@keyframes dpOrbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 /* 灯泡徽章：白蓝渐变圆 + 蓝环；深色主题换深蓝底。 */
 .dpl-bulb-badge{
   background:linear-gradient(160deg,#f3f8fe 0%,#e2edfc 100%);
@@ -685,8 +695,10 @@ const wrapStyle = (dragging: boolean, pos: PillPos | null, scale: number, fontSt
 } as unknown as CSSProperties)
 
 /** 胶囊外壳最大宽度（px）：与 pillShellStyle 的 maxWidth 同源——
- *  居中/锚定计算要复刻同一钳制规则，超宽胶囊的位置才算得准。 */
-const SHELL_MAX_W = 720
+ *  居中/锚定计算要复刻同一钳制规则，超宽胶囊的位置才算得准。
+ *  v0.2.1：720 → 960，趣味词条（30+ 字）不再被截断（用户反馈「字没有
+ *  完全显示出来」）；超出视口时仍以省略号兜底。 */
+const SHELL_MAX_W = 960
 
 /** 居中/锚定计算用的「实际渲染宽」：优先取受控目标宽（宽度过渡的终点，
  *  用它算出的坐标才与宽度动画同时抵达），并复刻外壳 maxWidth 的钳制；
@@ -710,7 +722,7 @@ const pillShellStyle = (width: number | null): CSSProperties => ({
   height: `calc(${PILL_H}px * var(--dps))`,
   maxWidth: `min(${SHELL_MAX_W}px, calc(100vw - 48px))`,
   ...(width !== null ? { width } : {}),
-  borderRadius: '999px',
+  borderRadius: 'calc(18px * var(--dps))',
   fontSize: 'calc(15px * var(--dps))',
   lineHeight: 'calc(23px * var(--dps))',
   whiteSpace: 'nowrap',
@@ -854,11 +866,11 @@ function ChevronIcon(props: { size?: number }): JSX.Element {
   )
 }
 
-/** 主体与左块之间的细分隔线（复刻参考稿的浅灰竖线）。 */
+/** 主体与左块之间的细分隔线（复刻参考稿的浅灰竖线；随胶囊收矮）。 */
 const pillDividerStyle: CSSProperties = {
   flex: 'none',
   width: 1,
-  margin: 'calc(13px * var(--dps)) calc(12px * var(--dps))',
+  margin: 'calc(10px * var(--dps)) calc(12px * var(--dps))',
   alignSelf: 'stretch',
   background: 'var(--dpl-divider)',
 }
@@ -933,14 +945,9 @@ const runningBlockStyle = (hasRunning: boolean): CSSProperties => ({
   cursor: 'pointer',
 })
 
-/** 运行中蓝点：小圆，外圈脉冲见 .dp-run-dot。 */
-const runDotStyle: CSSProperties = {
-  flex: 'none',
-  width: 'calc(9px * var(--dps))',
-  height: 'calc(9px * var(--dps))',
-  borderRadius: '50%',
-  background: 'var(--dpl-accent)',
-}
+/** 运行中指示（华为星环）：细环 + 发光卫星；几何走 CSS 类 .dp-run-orb*，
+ *  颜色走 --dpl-accent（随主题）。 */
+const runOrbStyle: CSSProperties = { flex: 'none' }
 
 /** 面板内列表项的蓝点：面板不参与胶囊缩放，固定 8px 小圆。 */
 const panelDotStyle: CSSProperties = {
@@ -1967,7 +1974,12 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
                 if (first !== undefined) openSession(first.id)
               }}
             >
-              <span className="dp-run-dot" style={runDotStyle} aria-hidden />
+              <span className="dp-run-orb" style={runOrbStyle} aria-hidden>
+                <span className="dp-run-ring" />
+                <span className="dp-run-orbit">
+                  <span className="dp-run-sat" />
+                </span>
+              </span>
               <span>{runningSessions.length}</span>
             </button>
             <span style={pillDividerStyle} aria-hidden />
