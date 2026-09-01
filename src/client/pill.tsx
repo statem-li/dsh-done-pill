@@ -547,9 +547,6 @@ const PILL_CSS = `
   --dpl-caption-fg:#5c7396;
   --dpl-wave:#eaf1fd;
   --dpl-cloud:#eef3fc;
-  /* 星环加载器（华为星环）：参考「加载」指示器——灰环 + 深灰圆球 + 软影 */
-  --dpl-orbit-ring:rgba(52,58,68,.36);
-  --dpl-orbit-dot:#4b5059;
   --dpl-illo-1a:#d6e5fa; --dpl-illo-1b:#9dc3f4;
   --dpl-illo-2a:#bdd6f8; --dpl-illo-2b:#86b5f1;
   --dpl-illo-dot:#a3c7f3;
@@ -578,8 +575,6 @@ body[data-ds-dark-theme] .dsh-done-pill{
   --dpl-caption-fg:#9db1d6;
   --dpl-wave:rgba(111,165,255,.13);
   --dpl-cloud:rgba(111,165,255,.08);
-  --dpl-orbit-ring:rgba(255,255,255,.30);
-  --dpl-orbit-dot:#e2e7ee;
   --dpl-illo-1a:#2c3b55; --dpl-illo-1b:#1f2c42;
   --dpl-illo-2a:#26344e; --dpl-illo-2b:#1d2940;
   --dpl-illo-dot:#3d5f8e;
@@ -612,20 +607,22 @@ body[data-ds-dark-theme] .dsh-done-pill-shell{
 .dsh-done-pill-shell[data-unread="1"]::after{opacity:1;animation:dpScan 3.4s cubic-bezier(.4,0,.2,1) infinite}
 .dsh-done-pill-shell:hover::after{opacity:1}
 @keyframes dpScan{0%{transform:translateX(-140%)}62%{transform:translateX(140%)}100%{transform:translateX(140%)}}
-/* 运行中指示（华为星环：「加载」样式）：细灰环（2px 描边）+ 深灰圆球
-   （带软投影）绕环旋转 1.2s/圈——球心骑在环线上，颜色走 --dpl-orbit-*
-   （中性灰，随主题），与胶囊蓝强调区分开，读作「正在加载/执行中」。 */
-.dp-run-orb{position:relative;flex:none;width:calc(18px * var(--dps));height:calc(18px * var(--dps));border-radius:50%}
-.dp-run-ring{position:absolute;inset:0;border-radius:50%;box-shadow:inset 0 0 0 2px var(--dpl-orbit-ring)}
-.dp-run-orbit{position:absolute;inset:0;animation:dpOrbit 1.2s linear infinite;will-change:transform}
-.dp-run-sat{
-  position:absolute;top:50%;left:0;
-  width:calc(4.5px * var(--dps));height:calc(4.5px * var(--dps));
-  transform:translate(-50%,-50%);border-radius:50%;
-  background:var(--dpl-orbit-dot);
-  box-shadow:0 calc(1px * var(--dps)) calc(2px * var(--dps)) rgba(15,18,24,.35);
+/* 运行中指示（正常加载动画 · 柔和转圈）：一圈渐隐弧线匀速旋转
+   （1.1s/圈，头亮尾淡，conic-gradient + 圆环 mask），颜色跟随
+   --dpl-accent（蓝强调，随主题）；替代此前的卫星点/粒子/3D 环绕方案。 */
+.dp-run-orb{position:relative;flex:none;width:calc(18px * var(--dps));height:calc(18px * var(--dps))}
+.dp-run-spin{
+  position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,
+    color-mix(in srgb,var(--dpl-accent) 0%,transparent) 0deg,
+    var(--dpl-accent) 250deg,
+    color-mix(in srgb,var(--dpl-accent) 0%,transparent) 320deg);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 2.6px),#000 calc(100% - 2px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 2.6px),#000 calc(100% - 2px));
+  animation:dpSpin 1.1s linear infinite;
+  will-change:transform;
 }
-@keyframes dpOrbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes dpSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 /* 灯泡徽章：白蓝渐变圆 + 蓝环；深色主题换深蓝底。 */
 .dpl-bulb-badge{
   background:linear-gradient(160deg,#f3f8fe 0%,#e2edfc 100%);
@@ -951,7 +948,7 @@ const runningBlockStyle = (hasRunning: boolean): CSSProperties => ({
   cursor: 'pointer',
 })
 
-/** 运行中指示（华为星环）：细环 + 发光卫星；几何走 CSS 类 .dp-run-orb*，
+/** 运行中指示容器（正常加载转圈弧线）：几何/mask/动画走 CSS 类 .dp-run-orb*，
  *  颜色走 --dpl-accent（随主题）。 */
 const runOrbStyle: CSSProperties = { flex: 'none' }
 
@@ -1981,10 +1978,7 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
               }}
             >
               <span className="dp-run-orb" style={runOrbStyle} aria-hidden>
-                <span className="dp-run-ring" />
-                <span className="dp-run-orbit">
-                  <span className="dp-run-sat" />
-                </span>
+                <span className="dp-run-spin" />
               </span>
               <span>{runningSessions.length}</span>
             </button>
