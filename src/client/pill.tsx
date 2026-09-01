@@ -62,8 +62,13 @@ const READ_KEY = 'dsh.donePill.read'
 const POS_KEY = 'dsh.donePill.pos'
 const ENABLED_KEY = 'dsh.donePill.enabled'
 
-// 运行时会话服务（点击跳转会话用；未提供时降级为不可跳转）。
-let sessionsRuntime: { open(id: SessionId): void } | undefined
+// 运行时会话服务（点击跳转会话用）。v0.2.7 改为**点击时懒取**：DSH 0.1.2 的
+// session-controller.client 在 boot 后期才 `provide('sessions')`，而插件
+// client apply 在加载期执行——apply 时取一次往往拿到 undefined，点击就
+// 静默失效（用户反馈「点击跳转不跳了」）。每次点击重新 get，拿到才调用；
+// 拿不到只 warn 一次，便于在控制台排查。
+let sessionsAccessor: (() => { open(id: SessionId): void } | undefined) | undefined
+let sessionsWarned = false
 
 // ---- localStorage 工具 ----
 // 持久化：已读 id 集合、胶囊位置、显隐开关；完成记录每次页面加载从 host
@@ -1748,7 +1753,20 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
   }, [])
 
   const openSession = useCallback((sessionId: string, markReadId?: string): void => {
-    try { sessionsRuntime?.open(sessionId as SessionId) } catch { /* 会话可能已不在列表 */ }
+    try {
+      const runtime = sessionsAccessor?.()
+      if (runtime === undefined) {
+        if (!sessionsWarned) {
+          sessionsWarned = true
+          console.warn('[dsh-done-pill] sessions 服务不可用，点击无法跳转会话（刷新页面后重试）')
+        }
+      } else {
+        runtime.open(sessionId as SessionId)
+      }
+    } catch (error) {
+      // 会话可能已不在列表/服务不在就绪态：不影响已读标记，静默。
+      console.warn('[dsh-done-pill] 跳转会话失败：', error)
+    }
     if (markReadId !== undefined) {
       setReadIds(prev => {
         if (prev.has(markReadId)) return prev
@@ -2186,7 +2204,10 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
 export function applyDonePill(ctx: ClientContext): void {
   // 样式先行：早于组件首次渲染注入，避免「无样式首帧 + 颜色过渡」。
   ensurePillKeyframes()
-  try { sessionsRuntime = (ctx as any).get('sessions') } catch { sessionsRuntime = undefined }
+  // sessions 服务懒取（点击时才真正 get；apply 同时段拿不到也不影响）。
+  sessionsAccessor = () => {
+    try { return (ctx as any).get('sessions') as { open(id: SessionId): void } | undefined } catch { return undefined }
+  }
   ctx.slots.inject('shell.overlay', () => ctx.slots.register({
     name: 'shell.overlay',
     id: 'dsh-done-pill',
