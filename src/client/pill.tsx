@@ -1554,11 +1554,12 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
   useLayoutEffect(() => { ensurePillKeyframes() }, [])
   useEffect(() => {
     setReminderTick(t => t + 1)
-    const timer = window.setInterval(() => { setReminderTick(t => t + 1) }, 30000)
+    const timer = window.setInterval(() => { setReminderTick(t => t + 1) }, 10000)
     return () => { window.clearInterval(timer) }
   }, [])
 
-  // 健康提醒激活判断（reminderTick 每 30 秒变化触发重算）。
+  // 健康提醒激活判断（reminderTick 每 10 秒变化触发重算：分钟切换最多延迟
+  // 10 秒，够准；无秒级文案后不再需要 1s 定时器）。
   const nowMinutes = (() => {
     const d = new Date()
     void reminderTick
@@ -1566,16 +1567,6 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
   })()
   const lateActive = lateConfig.enabled && inTimeRange(nowMinutes, lateConfig)
   const restActive = !lateActive && restConfig.enabled && inTimeRange(nowMinutes, restConfig)
-
-  // 凌晨提醒的秒级时钟：激活期间每秒跳动（「凌晨 N 点 M 分 S 秒」）；
-  // 未激活时不起定时器（零开销）。
-  const [clockTick, setClockTick] = useState(0)
-  useEffect(() => {
-    if (!lateActive) return
-    setClockTick(t => t + 1)
-    const timer = window.setInterval(() => { setClockTick(t => t + 1) }, 1000)
-    return () => { window.clearInterval(timer) }
-  }, [lateActive])
 
   // 自动居中模式（从未手动拖拽过）：胶囊宽度随文字变化（任务完成时变长），
   // 固定 left 会偏离居中——每次渲染后按目标宽重算水平居中（见 syncPosition），
@@ -1868,7 +1859,6 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
 
   // 健康提醒文案：凌晨提示优先于休息时段；时段内作为徽章常驻最左侧。
   const nowDate = new Date()
-  void clockTick // 秒级跳动：每次 clockTick 变化重算文案（避免未引用告警）
   let reminderLabel: string | null = null
   let reminderIcon: ReminderIconKind = 'moon'
   if (lateActive) {
@@ -1877,8 +1867,8 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
     // 「凌晨 N 点」只在真的凌晨（0-4 点）才说得通。该提醒的时段可自定义，
     // 旧文案对任何时刻都硬说「凌晨」——设成 18:00-23:00 会得到「凌晨 18 点了」。
     reminderLabel = hour <= 4
-      ? `凌晨 ${hour} 点 ${nowDate.getMinutes()} 分 ${nowDate.getSeconds()} 秒，注意休息`
-      : `${hour >= 22 ? '夜深了' : `已 ${hour} 点`}，注意休息`
+      ? `凌晨 ${hour} 点 ${nowDate.getMinutes()} 分`
+      : `${hour >= 22 ? '夜深了' : `已 ${hour} 点`}`
   } else if (restActive) {
     reminderIcon = 'coffee'
     reminderLabel = `休息时间（${restConfig.start}-${restConfig.end}），该休息一下了`
