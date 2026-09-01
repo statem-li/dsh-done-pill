@@ -31,6 +31,12 @@
 > （getBoundingClientRect）不含 margin，导致外壳算窄、右内边距被
 > overflow 裁掉（箭头贴边、疑似丢字）——间距并入分隔线自身宽度（25px），
 > 宽度测量再加外壳上限钳制兜底；右内边距 22→24px。
+>
+> v0.2.5（修复）：完成记录不出现的根因——**DSH 0.1.2+ 的 Session 已把
+> 事件日志私有化**（只暴露 `snapshotEvents()`，`session.events` 恒为空），
+> host 端读旧字段导致提取不到问题/回复、条目全被「空回合」跳过。已改为
+> `snapshotEvents()` 优先、旧 `events` 数组回退；**本版本含 host 端修改，
+> 需要重启一次 DSH 服务才生效**（client 侧随页面刷新即可）。
 
 ## 模块清单
 

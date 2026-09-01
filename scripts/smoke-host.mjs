@@ -76,10 +76,17 @@ else pass('registered GET /api/dsh-done-pill (exact)')
 if (route !== undefined && route.kind !== 'exact') fail(`route kind expected "exact", got ${route.kind}`)
 
 // ── drive the listener + route handler ────────────────────────────────────
-const session = { id: 's1', header: { cwd: 'C:\\work\\proj' }, events: [] }
+// 主场景用 DSH 0.1.2+ 的 Session 形态：事件日志私有化，只暴露 snapshotEvents()。
+const session = {
+  id: 's1',
+  header: { cwd: 'C:\\work\\proj' },
+  _log: [],
+  snapshotEvents () { return this._log },
+}
 
 function emit(sessionLike, event) {
-  sessionLike.events.push(event)
+  if (Array.isArray(sessionLike.events)) sessionLike.events.push(event)
+  else if (Array.isArray(sessionLike._log)) sessionLike._log.push(event)
   ev.handler(sessionLike, event)
 }
 

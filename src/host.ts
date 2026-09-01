@@ -47,6 +47,24 @@ interface SessionEventLike {
   }
 }
 
+/**
+ * 事件日志访问：DSH 0.1.2+ 的 Session 已把事件日志私有化，只暴露
+ * `snapshotEvents()`（旧版直接暴露 `events` 数组）——读取两者兼容，
+ * 任一不可用时回退空数组（v0.2.5 修复：旧实现读 `session.events`
+ * 恒为空，完成条目全部被「空回合」跳过，提示不出现）。
+ */
+function eventsOf(session: SessionLike): readonly SessionEventLike[] {
+  const candidate = session as SessionLike & { snapshotEvents?: () => unknown }
+  if (typeof candidate.snapshotEvents === 'function') {
+    try {
+      const snapshot = candidate.snapshotEvents()
+      if (Array.isArray(snapshot)) return snapshot as readonly SessionEventLike[]
+    } catch { /* 快照失败按空处理 */ }
+    return []
+  }
+  return session.events ?? []
+}
+
 interface WebServerRoute {
   kind: 'exact' | 'prefix'
   path: string
@@ -129,7 +147,7 @@ export function applyDonePill(ctx: Context): void {
   function titleOf(session: SessionLike): string {
     const cached = titles.get(session.id)
     if (cached !== undefined && cached !== '') return cached
-    const events = session.events ?? []
+    const events = eventsOf(session)
     for (let i = events.length - 1; i >= 0; i--) {
       const data = events[i]?.data
       if (events[i]?.type === 'session/title' && typeof data?.title === 'string' && data.title !== '') {
@@ -204,7 +222,7 @@ export function applyDonePill(ctx: Context): void {
       const reasonKind = typeof event.data?.reason?.kind === 'string' ? event.data.reason.kind : ''
       if (reasonKind === 'aborted') return
       const turn = typeof event.data?.turn === 'number' ? event.data.turn : -1
-      const events = session.events ?? []
+      const events = eventsOf(session)
       const { question, answer } = extractTurnTexts(events, turn)
       // 空回合（无回复也无提问，例如纯斜杠命令回合）不值得上报。
       if (question === '' && answer === '') return
