@@ -742,7 +742,7 @@ const pillMainStyle: CSSProperties = {
   alignItems: 'center',
   gap: 'calc(12px * var(--dps))',
   minWidth: 0,
-  padding: '0 calc(22px * var(--dps)) 0 calc(20px * var(--dps))',
+  padding: '0 calc(24px * var(--dps)) 0 calc(20px * var(--dps))',
   border: 'none',
   background: 'transparent',
   color: 'inherit',
@@ -869,13 +869,15 @@ function ChevronIcon(props: { size?: number }): JSX.Element {
   )
 }
 
-/** 主体与左块之间的细分隔线（复刻参考稿的浅灰竖线；随胶囊收矮）。 */
+/** 主体与左块之间的细分隔线（复刻参考稿的浅灰竖线）。
+ *  ⚠ 不能用 margin 做左右间距：外壳宽度测量用 getBoundingClientRect
+ *  （不含 margin），会给外壳算窄 24px/条，主按钮右内边距被 overflow
+ *  裁掉（v0.2.4 修复：间距并入自身 width，竖线用渐变纵向收进）。 */
 const pillDividerStyle: CSSProperties = {
   flex: 'none',
-  width: 1,
-  margin: 'calc(10px * var(--dps)) calc(12px * var(--dps))',
+  width: 'calc(25px * var(--dps))',
   alignSelf: 'stretch',
-  background: 'var(--dpl-divider)',
+  background: 'linear-gradient(to bottom, transparent, var(--dpl-divider) 24%, var(--dpl-divider) 76%, transparent) center / 1px 100% no-repeat',
 }
 
 /** shell 直接子项统一禁止收缩：宽度测量（子块求和）才不受受控宽度污染。 */
@@ -1889,10 +1891,14 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
     if (el === null) return
     let total = 0
     for (const child of el.children) total += child.getBoundingClientRect().width
-    // 无边框（只有角标，角标不影响布局），无需再加 border 占位。
-    if (total > 0 && Math.round(total) !== shellWidthRef.current) {
-      shellWidthRef.current = Math.round(total)
-      setShellWidth(Math.round(total))
+    // 无边框（inset 环走 box-shadow），无需再加 border 占位。钳制到外壳
+    // 上限：内容组合（提醒+运行中+主文案）瞬时超宽时不会把右内边距裁掉
+    // （v0.2.4）。宽度上限与 pillShellStyle 的 maxWidth 同源。
+    const cap = Math.min(SHELL_MAX_W, window.innerWidth - 48)
+    const target = Math.min(Math.round(total), cap)
+    if (target > 0 && target !== shellWidthRef.current) {
+      shellWidthRef.current = target
+      setShellWidth(target)
     }
     // 装饰宽 = 子块总宽 − 主文案实际宽度。文案被 maxWidth 截断时用
     // scrollWidth（自然宽）会算大，这里取渲染宽即可：装饰部分的宽度与
