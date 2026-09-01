@@ -108,7 +108,7 @@ function defaultShellTop(): number {
 /** 把位置夹回视口内并取整（防拖出屏幕；非整数像素会让文字发糊）。
  *  w/h = 胶囊**实际渲染尺寸**：旧实现固定按 160×56 估算，600px 宽的胶囊
  *  能被拖出屏幕大半（右缘算不进去）；缩放到 160% 时高度同理。 */
-function clampPos(x: number, y: number, w = 160, h = 30): PillPos {
+function clampPos(x: number, y: number, w = 160, h = PILL_H): PillPos {
   const margin = 8
   const maxX = Math.max(margin, window.innerWidth - w - margin)
   const maxY = Math.max(margin, window.innerHeight - h - margin)
@@ -154,14 +154,17 @@ function saveAnchor(anchor: PillAnchor): void {
   try { localStorage.setItem(POS_KEY, JSON.stringify(anchor)) } catch { /* 忽略 */ }
 }
 
-/** 胶囊外壳高度（px）：与 pillShellStyle 的 height 同源（30px × 缩放）。 */
+/** 胶囊外壳基准高度（px）：与 pillShellStyle 的 height 同源，复刻参考稿
+ *  （54px 高、全圆角、15px 文字）的 1:1 比例。 */
+const PILL_H = 54
+
 function pillHeight(scale: number): number {
-  return Math.max(1, Math.round(30 * scale))
+  return Math.max(1, Math.round(PILL_H * scale))
 }
 
 /** 中心锚点 → 当前视口下的左上角坐标（shellWidth/shellHeight 为当前渲染尺寸）。
  *  高度必须参与换算：缩放到 160% 时半高是 24px 而非 15px，写死会让垂直位置漂移。 */
-function anchorToPos(anchor: PillAnchor, shellWidth: number, shellHeight = 30): PillPos {
+function anchorToPos(anchor: PillAnchor, shellWidth: number, shellHeight = PILL_H): PillPos {
   return clampPos(
     Math.round(anchor.xc * window.innerWidth - shellWidth / 2),
     Math.round(anchor.yc * window.innerHeight - shellHeight / 2),
@@ -297,7 +300,7 @@ const FUN_LINES: FunLine[] = [
   { icon: 'bulb', text: '解码器 Decoder：根据编码信息逐字生成的模块' },
   { icon: 'bulb', text: '位置编码 Positional Encoding：让模型感知词序的方法' },
   { icon: 'bulb', text: '残差连接 Residual：跨层直连通道，缓解深层网络退化' },
-  { icon: 'bulb', text: '归一化 Normalization：稳定数值分布、加速训练的技巧' },
+  { icon: 'bulb', text: '归一化 Normalization：稳定数值分布，加速训练的技巧' },
   { icon: 'bulb', text: '激活函数 Activation：引入非线性，让网络能学复杂关系' },
   { icon: 'bulb', text: '预训练 Pre-training：在大规模语料上无监督学习通用知识' },
   { icon: 'bulb', text: '监督微调 SFT：用问答范例教模型按指令作答' },
@@ -518,133 +521,120 @@ function ensurePillKeyframes(): void {
 const PILL_STYLE_ID = 'dsh-done-pill-css'
 
 const PILL_CSS = `
-@keyframes dpLineIn{from{opacity:0}to{opacity:1}}
-/* ── 线条科技感（tech-line）：细 1px 描边 + 青色强调 + 光斑动效 ──
-   浅色主题（默认）：全透明底，只有文字与状态件（无框无线，浮在页面上）。 */
+@keyframes dpLineIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+/* ── 对话胶囊（soft-card）：复刻「对话完成记录」参考稿 ──
+   浅色主题（默认）：暖白渐变胶囊 + 蓝强调 + 白色圆角大卡片。 */
 .dsh-done-pill{
-  --dpl-fg:#101a24;
-  --dpl-fg-dim:#38485c;
-  --dpl-fg-weak:#7286a0;
-  --dpl-accent:#0e7490;
-  --dpl-warn:#b45309;
-  --dpl-ok:#15803d;
-  --dpl-corner:color-mix(in srgb,var(--dpl-accent) 62%,#ffffff);
-  --dpl-surface:rgba(252,253,254,.88);
-  --dpl-surface-hover:#ffffff;
-  --dpl-border:rgba(6,86,108,.34);
-  --dpl-divider:rgba(6,86,108,.20);
-  --dpl-hover:rgba(14,116,144,.08);
-  --dpl-scan:color-mix(in srgb,var(--dpl-accent) 45%,#ffffff);
-  --dpl-shadow:0 1px 3px rgba(16,26,36,.10),0 4px 14px rgba(16,26,36,.14);
+  --dpl-fg:#11161f;
+  --dpl-fg-dim:#5b6880;
+  --dpl-fg-weak:#8b95a8;
+  --dpl-accent:#2e6ffb;
+  --dpl-accent-2:#1d5ce8;
+  --dpl-accent-soft:#e9f1fe;
+  --dpl-accent-ring:#a8c9f4;
+  --dpl-warn:#e15a17;
+  --dpl-ok:#1fa05a;
+  /* 外壳：inset 细边 + 柔投影；hover 微抬升（参考稿卡片投影语言）。 */
+  --dpl-shell-shadow:inset 0 0 0 1px rgba(118,132,164,.16),0 12px 28px rgba(70,90,140,.12),0 2px 8px rgba(70,90,140,.07);
+  --dpl-shell-shadow-hover:inset 0 0 0 1px rgba(118,132,164,.22),0 16px 34px rgba(70,90,140,.16),0 3px 10px rgba(70,90,140,.09);
+  --dpl-divider:#e8edf5;
   --dpl-panel-bg:#ffffff;
-  --dpl-panel-border:rgba(6,86,108,.24);
-  --dpl-panel-shadow:0 12px 40px rgba(16,26,36,.16),0 2px 8px rgba(16,26,36,.06);
+  --dpl-panel-border:#e3eaf7;
+  --dpl-panel-shadow:0 20px 52px rgba(80,110,170,.16),0 4px 16px rgba(80,110,170,.08);
+  --dpl-row-bg:#f6f8fc;
+  --dpl-row-hover:#eef4fc;
+  --dpl-caption-bg:#ecf1fa;
+  --dpl-caption-fg:#5c7396;
+  --dpl-wave:#eaf1fd;
+  --dpl-cloud:#eef3fc;
+  --dpl-illo-1a:#d6e5fa; --dpl-illo-1b:#9dc3f4;
+  --dpl-illo-2a:#bdd6f8; --dpl-illo-2b:#86b5f1;
+  --dpl-illo-dot:#a3c7f3;
+  --dpl-illo-dots:#7fa8ec;
 }
-/* 深色主题：全透明底 + 青色强调，只留文字与状态件（无框无线，
-   直接浮在页面背景上）。 */
+/* 深色主题：深灰蓝底 + 更亮的蓝强调，几何骨架与动画不变。 */
 body[data-ds-dark-theme] .dsh-done-pill{
-  --dpl-fg:#dbe7ee;
-  --dpl-fg-dim:#93a8b5;
-  --dpl-fg-weak:#5d7382;
-  --dpl-accent:#22d3ee;
-  --dpl-warn:#f5b942;
-  --dpl-ok:#31d07c;
-  --dpl-border:rgba(103,232,249,.20);
-  --dpl-divider:rgba(103,232,249,.16);
-  --dpl-hover:rgba(34,211,238,.10);
-  --dpl-surface:rgba(12,19,26,.85);
-  --dpl-surface-hover:rgba(18,28,38,.95);
-  --dpl-scan:color-mix(in srgb,var(--dpl-accent) 32%,transparent);
-  --dpl-shadow:0 2px 12px rgba(0,0,0,.4),0 0 0 1px rgba(103,232,249,.05);
-  --dpl-panel-bg:rgba(10,14,19,.97);
-  --dpl-panel-border:rgba(103,232,249,.16);
-  --dpl-panel-shadow:0 16px 44px rgba(0,0,0,.6),0 0 24px color-mix(in srgb,var(--dpl-accent) 10%,transparent);
+  --dpl-fg:#e8ecf4;
+  --dpl-fg-dim:#9aa7bd;
+  --dpl-fg-weak:#6b7890;
+  --dpl-accent:#6fa5ff;
+  --dpl-accent-2:#5b93f5;
+  --dpl-accent-soft:#22314a;
+  --dpl-accent-ring:#3c5d8e;
+  --dpl-warn:#ffa066;
+  --dpl-ok:#3ecf7e;
+  --dpl-shell-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 14px 32px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.35);
+  --dpl-shell-shadow-hover:inset 0 0 0 1px rgba(255,255,255,.18),0 18px 40px rgba(0,0,0,.6),0 3px 10px rgba(0,0,0,.4);
+  --dpl-divider:rgba(255,255,255,.14);
+  --dpl-panel-bg:#1a1d24;
+  --dpl-panel-border:rgba(255,255,255,.10);
+  --dpl-panel-shadow:0 22px 56px rgba(0,0,0,.62),0 4px 16px rgba(0,0,0,.4);
+  --dpl-row-bg:#232730;
+  --dpl-row-hover:#2a2f3b;
+  --dpl-caption-bg:#262b37;
+  --dpl-caption-fg:#9db1d6;
+  --dpl-wave:rgba(111,165,255,.13);
+  --dpl-cloud:rgba(111,165,255,.08);
+  --dpl-illo-1a:#2c3b55; --dpl-illo-1b:#1f2c42;
+  --dpl-illo-2a:#26344e; --dpl-illo-2b:#1d2940;
+  --dpl-illo-dot:#3d5f8e;
+  --dpl-illo-dots:#7fa8ec;
 }
-/* 外壳：半透明芯片面 + 四角实线直角角标（用户指定：直角 + 长短不一）——
-   有明显存在感（可辨容器/投影/主色文字），四角长度各不同（6–11px 档）。
-   无四边描边；hover 提亮。 */
+/* 外壳：暖白渐变胶囊（左侧奶油 → 右侧白，随内容横向渐变）+ 柔投影。
+   表面色只走样式表：内联只写几何（见 pillShellStyle），避免内联覆盖样式表。 */
 .dsh-done-pill-shell{
-  background:
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 0,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 0,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 0,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 0,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 100%,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 100%,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 100%,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 100%,
-    var(--dpl-surface);
-  background-size:
-    calc(10px * var(--dps)) calc(2px * var(--dps)),
-    calc(2px * var(--dps)) calc(8px * var(--dps)),
-    calc(8px * var(--dps)) calc(2px * var(--dps)),
-    calc(2px * var(--dps)) calc(10px * var(--dps)),
-    calc(9px * var(--dps)) calc(2px * var(--dps)),
-    calc(2px * var(--dps)) calc(7px * var(--dps)),
-    calc(11px * var(--dps)) calc(2px * var(--dps)),
-    calc(2px * var(--dps)) calc(6px * var(--dps)),
-    auto;
-  background-repeat:no-repeat;
+  background:linear-gradient(100deg,#fef6ec 0%,#fdfcf6 42%,#fcfdfe 100%);
   color:var(--dpl-fg);
-  box-shadow:var(--dpl-shadow);
+  box-shadow:var(--dpl-shell-shadow);
 }
-.dsh-done-pill-shell:hover{
-  background:
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 0,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 0,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 0,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 0,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 100%,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 0 100%,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 100%,
-    linear-gradient(var(--dpl-corner),var(--dpl-corner)) 100% 100%,
-    var(--dpl-surface-hover);
-  background-size:
-    calc(10px * var(--dps)) calc(2px * var(--dps)),
-    calc(2px * var(--dps)) calc(8px * var(--dps)),
-    calc(8px * var(--dps)) calc(2px * var(--dps)),
-    calc(2px * var(--dps)) calc(10px * var(--dps)),
-    calc(9px * var(--dps)) calc(2px * var(--dps)),
-    calc(2px * var(--dps)) calc(7px * var(--dps)),
-    calc(11px * var(--dps)) calc(2px * var(--dps)),
-    calc(2px * var(--dps)) calc(6px * var(--dps)),
-    auto;
-  background-repeat:no-repeat;
+.dsh-done-pill-shell:hover{box-shadow:var(--dpl-shell-shadow-hover)}
+body[data-ds-dark-theme] .dsh-done-pill-shell{
+  background:linear-gradient(100deg,#262832 0%,#1f222a 42%,#1b1e25 100%);
 }
-/* 未读态：文字转主色号 + 加重。 */
+/* 未读态：主文字加重。 */
 .dsh-done-pill-shell[data-unread="1"]{
-  color:var(--dpl-fg);
   font-weight:500;
 }
-/* 拖拽中：扫描带关闭。 */
+/* 拖拽中：关闭扫描/动画。 */
 .dsh-done-pill-shell[data-dragging="1"]::after{animation:none;opacity:0;transform:none}
-/* 扫描光带：未读时常驻循环、悬停时补扫一遍；拖拽时关闭（见上）。
-   ::after 不参与 flex 布局与宽度测量（度量走 el.children）。 */
+/* 扫描光带：未读时常驻循环、悬停时补扫一遍（保留原节奏，颜色改蓝白）。 */
 .dsh-done-pill-shell::after{
   content:'';position:absolute;top:0;bottom:0;left:0;width:38%;
   pointer-events:none;opacity:0;
-  background:linear-gradient(90deg,transparent,var(--dpl-scan) 50%,transparent);
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--dpl-accent) 8%,transparent) 50%,transparent);
   transform:translateX(-140%);will-change:transform,opacity;
 }
 .dsh-done-pill-shell[data-unread="1"]::after{opacity:1;animation:dpScan 3.4s cubic-bezier(.4,0,.2,1) infinite}
 .dsh-done-pill-shell:hover::after{opacity:1}
 @keyframes dpScan{0%{transform:translateX(-140%)}62%{transform:translateX(140%)}100%{transform:translateX(140%)}}
-/* 运行点脉冲：琥珀光点向外扩散一环（科技仪表式的活跃指示）。 */
+/* 运行点脉冲：蓝点向外扩散一环。 */
 .dp-run-dot{animation:dpPulse 1.5s cubic-bezier(.4,0,.6,1) infinite}
-@keyframes dpPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--dpl-warn) 45%,transparent)}100%{box-shadow:0 0 0 6px transparent}}
-/* 面板标题下沿刻度轨：青点虚线（HUD 分段线语言）。 */
-.dsh-done-pill .dp-panel-head{position:relative}
-.dsh-done-pill .dp-panel-head::after{
-  content:'';position:absolute;left:0;right:0;bottom:0;height:1px;
-  background:repeating-linear-gradient(90deg,var(--dpl-accent) 0 6px,transparent 6px 12px);
-  opacity:.45;pointer-events:none;
+@keyframes dpPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--dpl-accent) 40%,transparent)}100%{box-shadow:0 0 0 7px transparent}}
+/* 灯泡徽章：白蓝渐变圆 + 蓝环；深色主题换深蓝底。 */
+.dpl-bulb-badge{
+  background:linear-gradient(160deg,#f3f8fe 0%,#e2edfc 100%);
+  box-shadow:inset 0 0 0 1.5px var(--dpl-accent-ring);
+  color:var(--dpl-accent);
 }
-/* 面板内可点行（任务行 / 完成记录卡）：hover 左侧描出青色刻度线。 */
+body[data-ds-dark-theme] .dpl-bulb-badge{
+  background:linear-gradient(160deg,#26344e 0%,#1d2940 100%);
+  color:#8ab5ff;
+}
+.dpl-bulb-spark{background:#6aa1f7}
+body[data-ds-dark-theme] .dpl-bulb-spark{background:#6aa1f7}
+/* 主体按钮：箭头 hover 右移 2px（微交互）。 */
+.dsh-done-pill-main .dpl-chev{transition:transform .18s ease}
+.dsh-done-pill-main:hover .dpl-chev{transform:translateX(2px)}
+/* 面板内可点行（任务行 / 完成记录卡）：hover 浅蓝底 + 左侧蓝描边。 */
 .dsh-done-pill-row{transition:background .12s ease,box-shadow .12s ease}
-.dsh-done-pill-row:hover{background:var(--dpl-hover);box-shadow:inset 2px 0 0 var(--dpl-accent)}
+.dsh-done-pill-row:hover{background:var(--dpl-row-hover);box-shadow:inset 3px 0 0 var(--dpl-accent)}
 .dsh-done-pill-row:focus-visible{outline:2px solid var(--dpl-accent);outline-offset:-2px}
 .dsh-done-pill-close{transition:background .12s ease,color .12s ease}
-.dsh-done-pill-close:hover{background:var(--dpl-hover);color:var(--dpl-fg)}
+.dsh-done-pill-close:hover{background:color-mix(in srgb,var(--dpl-accent) 10%,transparent);color:var(--dpl-accent)}
+/* 头部「点击卡片进入会话」链接：hover 下划线。 */
+.dsh-done-pill-link{transition:color .12s ease}
+.dsh-done-pill-link:hover{text-decoration:underline}
+.dsh-done-pill-link:disabled{color:var(--dpl-fg-weak);cursor:default;text-decoration:none}
 /* 面板滚动条：最细细条（3px、无轨道、无上下箭头按钮）——作用于面板本身
    与内部所有可滚动元素（记录卡内的 <pre> 全文等）。
    ⚠ 不能同时写标准 scrollbar-width/scrollbar-color：现代 Chromium 一旦
@@ -653,7 +643,7 @@ body[data-ds-dark-theme] .dsh-done-pill{
 .dsh-done-pill [role="dialog"]::-webkit-scrollbar,
 .dsh-done-pill [role="dialog"] *::-webkit-scrollbar{width:3px;height:3px}
 .dsh-done-pill [role="dialog"]::-webkit-scrollbar-thumb,
-.dsh-done-pill [role="dialog"] *::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--dpl-accent) 45%,var(--dpl-border));border-radius:1.5px}
+.dsh-done-pill [role="dialog"] *::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--dpl-accent) 45%,var(--dpl-caption-bg));border-radius:1.5px}
 .dsh-done-pill [role="dialog"]::-webkit-scrollbar-track,
 .dsh-done-pill [role="dialog"] *::-webkit-scrollbar-track{background:transparent}
 .dsh-done-pill [role="dialog"]::-webkit-scrollbar-button,
@@ -717,26 +707,27 @@ const pillShellStyle = (width: number | null): CSSProperties => ({
   position: 'relative', // 扫描光带（::after）的定位上下文
   display: 'flex',
   alignItems: 'stretch',
-  height: 'calc(30px * var(--dps))',
+  height: `calc(${PILL_H}px * var(--dps))`,
   maxWidth: `min(${SHELL_MAX_W}px, calc(100vw - 48px))`,
   ...(width !== null ? { width } : {}),
-  borderRadius: 'calc(4px * var(--dps))',
-  fontSize: 'calc(12px * var(--dps))',
-  lineHeight: 'calc(18px * var(--dps))',
+  borderRadius: '999px',
+  fontSize: 'calc(15px * var(--dps))',
+  lineHeight: 'calc(23px * var(--dps))',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   // 宽度伸缩与位置滑动/文字淡入同节奏（MORPH_DUR）；颜色类过渡也写在内联，
   // 否则内联 transition 会整条覆盖样式表里的 transition。
-  transition: `width ${MORPH_DUR} ease, background-color .14s ease, box-shadow .14s ease, border-color .14s ease, color .14s ease`,
+  transition: `width ${MORPH_DUR} ease, box-shadow .18s ease, color .14s ease`,
 })
 
-/** 胶囊主体（点击 = 进入最新完成的会话；按住拖动 = 移动胶囊）。 */
+/** 胶囊主体（点击 = 进入最新完成的会话；按住拖动 = 移动胶囊）。
+ *  左/右内边距复刻参考稿：左 20px、右 22px，徽章与文字间距 12px。 */
 const pillMainStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 'calc(7px * var(--dps))',
+  gap: 'calc(12px * var(--dps))',
   minWidth: 0,
-  padding: '0 calc(10px * var(--dps)) 0 calc(14px * var(--dps))',
+  padding: '0 calc(22px * var(--dps)) 0 calc(20px * var(--dps))',
   border: 'none',
   background: 'transparent',
   color: 'inherit',
@@ -746,82 +737,69 @@ const pillMainStyle: CSSProperties = {
   overflow: 'hidden',
 }
 
-/** ✓ 状态点：角框标记——未读 = 青框（淡青底 + 青勾）；已读 = 中性细框 + 绿勾。 */
-const checkIconStyle = (unread: number): CSSProperties => ({
+/** ✓ 未读徽章：蓝底白勾圆角块（新主色语言）。 */
+const checkBadgeStyle: CSSProperties = {
   flex: 'none',
-  width: 'calc(15px * var(--dps))',
-  height: 'calc(15px * var(--dps))',
-  borderRadius: 'calc(4px * var(--dps))',
-  boxSizing: 'border-box',
+  width: 'calc(20px * var(--dps))',
+  height: 'calc(20px * var(--dps))',
+  borderRadius: 'calc(7px * var(--dps))',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontSize: 'calc(10px * var(--dps))',
+  background: 'var(--dpl-accent)',
+  color: '#ffffff',
+  fontSize: 'calc(12px * var(--dps))',
   lineHeight: 1,
-  border: `calc(1.5px * var(--dps)) solid ${unread > 0 ? 'var(--dpl-accent)' : 'var(--dpl-border)'}`,
-  background: unread > 0 ? 'color-mix(in srgb, var(--dpl-accent) 14%, transparent)' : 'transparent',
-  color: unread > 0 ? 'var(--dpl-accent)' : 'var(--dpl-ok)',
-  transition: 'border-color .15s ease, background-color .15s ease, color .15s ease',
-})
+  fontWeight: 600,
+  transition: 'background-color .15s ease',
+}
 
-/** 健康提醒态图标（月亮 / 咖啡）：单色 SVG。 */
-const reminderIconStyle: CSSProperties = {
+/** 灯泡徽章容器：白蓝渐变圆 + 蓝环（面与环走 .dpl-bulb-badge，随主题）。 */
+const bulbBadgeStyle: CSSProperties = {
   flex: 'none',
-  width: 'calc(15px * var(--dps))',
-  height: 'calc(15px * var(--dps))',
+  position: 'relative',
+  width: 'calc(26px * var(--dps))',
+  height: 'calc(26px * var(--dps))',
+  borderRadius: '50%',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
 }
 
-/** 健康提醒徽章：时段内常驻最左侧，黄字不挤占完成通知。 */
+/** 健康提醒徽章（左段芯片）：橙色月亮 + 橙字，常驻胶囊最左侧。 */
 const reminderBadgeStyle: CSSProperties = {
   flex: 'none',
   display: 'flex',
   alignItems: 'center',
-  gap: 'calc(5px * var(--dps))',
-  padding: '0 calc(10px * var(--dps)) 0 calc(14px * var(--dps))',
-  // 琥珀色走官方 warn-label 令牌：浅色主题下 #f5c542 对白底几乎不可读。
+  gap: 'calc(10px * var(--dps))',
+  padding: '0 calc(28px * var(--dps)) 0 calc(24px * var(--dps))',
   color: 'var(--dpl-warn)',
-  fontSize: 'calc(12px * var(--dps))',
-  lineHeight: 'calc(18px * var(--dps))',
+  fontSize: 'calc(15px * var(--dps))',
+  lineHeight: 'calc(23px * var(--dps))',
   fontWeight: 500,
 }
 
 type ReminderIconKind = 'moon' | 'coffee'
 
-/** 单色线性图标（currentColor 跟随胶囊文字色）。 */
-function LineIcon(props: { kind: 'sparkle' | 'bulb' | 'moon' | 'coffee'; size?: number }): JSX.Element {
-  const size = props.size ?? 13
-  if (props.kind === 'sparkle') {
-    return (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden style={{ flex: 'none' }}>
-        <path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z" />
-      </svg>
-    )
-  }
-  if (props.kind === 'bulb') {
-    return (
-      <svg
-        width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flex: 'none' }}
-      >
-        <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
-        <line x1="9" y1="18" x2="15" y2="18" />
-        <line x1="10" y1="21" x2="14" y2="21" />
-      </svg>
-    )
-  }
-  if (props.kind === 'moon') {
-    return (
-      <svg
-        width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flex: 'none' }}
-      >
-        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-      </svg>
-    )
-  }
+/** 渐变月亮（暖橙→深橙，复刻参考稿左段图标）。 */
+function MoonIcon(props: { size?: number }): JSX.Element {
+  const size = props.size ?? 18
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden style={{ flex: 'none' }}>
+      <defs>
+        <linearGradient id="dpl-moon-grad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#D94500" />
+          <stop offset="1" stopColor="#F6A868" />
+        </linearGradient>
+      </defs>
+      <path d="M21 14.5A9.2 9.2 0 1 1 9.5 3a7.2 7.2 0 0 0 11.5 11.5Z" fill="url(#dpl-moon-grad)" />
+    </svg>
+  )
+}
+
+/** 咖啡图标（休息提醒态）：单色暖橙线性图标。 */
+function CoffeeIcon(props: { size?: number }): JSX.Element {
+  const size = props.size ?? 18
   return (
     <svg
       width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -835,11 +813,53 @@ function LineIcon(props: { kind: 'sparkle' | 'bulb' | 'moon' | 'coffee'; size?: 
   )
 }
 
-/** 主体与左块之间的细分隔线。 */
+/** 灯泡徽章（主文案图标）：白蓝渐变圆 + 蓝环 + 蓝色灯泡 + 右上角小光点。 */
+function BulbBadge(props: { scale: number }): JSX.Element {
+  const icon = Math.max(12, Math.round(15 * props.scale))
+  return (
+    <span className="dpl-bulb-badge" style={bulbBadgeStyle} aria-hidden>
+      <svg
+        width={icon} height={icon} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}
+      >
+        <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+        <line x1="9.5" y1="17" x2="14.5" y2="17" />
+        <line x1="10.5" y1="20" x2="13.5" y2="20" />
+      </svg>
+      <span
+        className="dpl-bulb-spark"
+        style={{
+          position: 'absolute',
+          top: 'calc(2px * var(--dps))',
+          right: 'calc(2px * var(--dps))',
+          width: 'calc(5px * var(--dps))',
+          height: 'calc(5px * var(--dps))',
+          borderRadius: '50%',
+        }}
+      />
+    </span>
+  )
+}
+
+/** 右箭头（>）：胶囊末端「可点击进入」提示。 */
+function ChevronIcon(props: { size?: number }): JSX.Element {
+  const size = props.size ?? 13
+  return (
+    <svg
+      width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flex: 'none' }}
+    >
+      <path d="m9 5 7 7-7 7" />
+    </svg>
+  )
+}
+
+/** 主体与左块之间的细分隔线（复刻参考稿的浅灰竖线）。 */
 const pillDividerStyle: CSSProperties = {
   flex: 'none',
   width: 1,
-  margin: 'calc(7px * var(--dps)) 0',
+  margin: 'calc(13px * var(--dps)) calc(12px * var(--dps))',
+  alignSelf: 'stretch',
   background: 'var(--dpl-divider)',
 }
 
@@ -851,7 +871,7 @@ const DONE_PANEL_W = 600
 /** 运行中任务面板宽度。 */
 const RUN_PANEL_W = 320
 
-/** 悬停滑出面板的公共骨架：底色/描边/投影走 --dpl-panel-*（随主题），
+/** 悬停滑出面板的公共骨架：白底圆角大卡 + 细边 + 柔投影（参考稿卡片语言），
  *  `up` = 向上翻转（胶囊被拖到视口下半时，面板改从上方滑出，否则会掉出
  *  屏幕底部且无法滚动到）。滑入方向随之取反，动画方向与位置一致。 */
 const floatPanelStyle = (
@@ -862,6 +882,7 @@ const floatPanelStyle = (
   maxHeight: string,
   gap: number,
   padding: number,
+  radius: number,
 ): CSSProperties => ({
   position: 'absolute',
   ...(up ? { bottom: '100%' } : { top: '100%' }),
@@ -874,7 +895,7 @@ const floatPanelStyle = (
   flexDirection: 'column',
   gap,
   padding,
-  borderRadius: 8,
+  borderRadius: radius,
   border: '1px solid var(--dpl-panel-border)',
   background: 'var(--dpl-panel-bg)',
   color: 'var(--dpl-fg)',
@@ -889,21 +910,21 @@ const floatPanelStyle = (
     : 'opacity .18s ease, transform .18s ease, visibility 0s linear .18s',
 })
 
-/** 记录面板：悬停主体时滑出（宽卡列表）。 */
+/** 记录面板：悬停主体时滑出（白卡 + 蓝条标题 + 空状态插画/列表）。 */
 const panelStyle = (open: boolean, shiftX: number, up: boolean): CSSProperties =>
-  floatPanelStyle(open, shiftX, up, DONE_PANEL_W, 'min(66vh, 600px)', 8, 12)
+  floatPanelStyle(open, shiftX, up, DONE_PANEL_W, 'min(66vh, 640px)', 0, 0, 20)
 
-/** 运行中任务面板：悬停引线上方计数块时滑出的窄列表。 */
+/** 运行中任务面板：悬停左侧计数块时滑出的窄列表。 */
 const runPanelStyle = (open: boolean, shiftX: number, up: boolean): CSSProperties =>
-  floatPanelStyle(open, shiftX, up, RUN_PANEL_W, 'min(60vh, 480px)', 4, 10)
+  floatPanelStyle(open, shiftX, up, RUN_PANEL_W, 'min(60vh, 480px)', 4, 12, 16)
 
-/** 胶囊左侧「运行中」区块：黄点 + 数量，悬停滑出任务列表。 */
+/** 胶囊左侧「运行中」区块：蓝点 + 数量，悬停滑出任务列表。 */
 const runningBlockStyle = (hasRunning: boolean): CSSProperties => ({
   flex: 'none',
   display: 'flex',
   alignItems: 'center',
-  gap: 'calc(6px * var(--dps))',
-  padding: '0 calc(10px * var(--dps)) 0 calc(14px * var(--dps))',
+  gap: 'calc(8px * var(--dps))',
+  padding: '0 calc(16px * var(--dps)) 0 calc(18px * var(--dps))',
   border: 'none',
   background: 'transparent',
   color: hasRunning ? 'var(--dpl-fg)' : 'var(--dpl-fg-weak)',
@@ -912,22 +933,22 @@ const runningBlockStyle = (hasRunning: boolean): CSSProperties => ({
   cursor: 'pointer',
 })
 
-/** 运行中黄点：小方块刻度，缩放跟随 --dps；外圈脉冲见 .dp-run-dot。 */
+/** 运行中蓝点：小圆，外圈脉冲见 .dp-run-dot。 */
 const runDotStyle: CSSProperties = {
   flex: 'none',
-  width: 'calc(7px * var(--dps))',
-  height: 'calc(7px * var(--dps))',
-  borderRadius: 'calc(1.5px * var(--dps))',
-  background: 'var(--dpl-warn)',
+  width: 'calc(9px * var(--dps))',
+  height: 'calc(9px * var(--dps))',
+  borderRadius: '50%',
+  background: 'var(--dpl-accent)',
 }
 
-/** 面板内列表项的黄点：面板不参与胶囊缩放，固定 7px 小方块刻度。 */
+/** 面板内列表项的蓝点：面板不参与胶囊缩放，固定 8px 小圆。 */
 const panelDotStyle: CSSProperties = {
   flex: 'none',
-  width: 7,
-  height: 7,
-  borderRadius: 1.5,
-  background: 'var(--dpl-warn)',
+  width: 8,
+  height: 8,
+  borderRadius: '50%',
+  background: 'var(--dpl-accent)',
 }
 
 const runRowStyle: CSSProperties = {
@@ -935,13 +956,13 @@ const runRowStyle: CSSProperties = {
   alignItems: 'center',
   gap: 8,
   width: '100%',
-  padding: '7px 8px',
-  borderRadius: 6,
+  padding: '8px 10px',
+  borderRadius: 10,
   border: 'none',
-  background: 'transparent',
+  background: 'var(--dpl-row-bg)',
   color: 'var(--dpl-fg)',
-  fontSize: 12,
-  lineHeight: '18px',
+  fontSize: 13,
+  lineHeight: '20px',
   textAlign: 'left',
   cursor: 'pointer',
 }
@@ -962,43 +983,71 @@ const runRowTimeStyle: CSSProperties = {
   fontVariantNumeric: 'tabular-nums',
 }
 
+// ---- 记录面板（复刻「对话完成记录」参考稿）----
+
+/** 面板头部：蓝条 + 标题 + 右侧计数/链接。 */
 const headStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: 8,
-  padding: '2px 2px 6px',
-  // 下沿刻度轨改由 .dp-panel-head::after（青色点虚线）提供，不再画实线。
+  gap: 12,
+  padding: '20px 24px 14px',
+}
+
+/** 标题左侧蓝色圆胶囊条。 */
+const headBarStyle: CSSProperties = {
+  flex: 'none',
+  width: 5,
+  height: 17,
+  borderRadius: 2.5,
+  background: 'var(--dpl-accent)',
 }
 
 const headTitleStyle: CSSProperties = {
   flex: 'none',
-  fontSize: 13,
+  fontSize: 17,
   fontWeight: 600,
-  letterSpacing: '.06em',
+  lineHeight: '24px',
   color: 'var(--dpl-fg)',
 }
 
 const headMetaStyle: CSSProperties = {
   flex: 1,
   minWidth: 0,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  gap: 10,
   whiteSpace: 'nowrap',
   textAlign: 'right',
-  fontSize: 11,
-  color: 'var(--dpl-fg-weak)',
+  fontSize: 13,
+  lineHeight: '20px',
+  color: 'var(--dpl-fg-dim)',
 }
 
+/** 「点击卡片进入会话」链接（蓝色）；无记录时禁用变灰。 */
+const headLinkStyle: CSSProperties = {
+  flex: 'none',
+  border: 'none',
+  background: 'transparent',
+  padding: 0,
+  margin: 0,
+  fontSize: 13,
+  lineHeight: '20px',
+  color: 'var(--dpl-accent)',
+  cursor: 'pointer',
+}
+
+/** 记录卡（列表行）：浅蓝底圆角卡 + hover 左描边。 */
 const cardStyle: CSSProperties = {
   border: 'none',
-  borderRadius: 8,
-  padding: '10px 12px',
+  borderRadius: 12,
+  padding: '10px 14px',
   display: 'flex',
   flexDirection: 'column',
-  gap: 6,
+  gap: 8,
   cursor: 'pointer',
-  background: 'transparent',
+  background: 'var(--dpl-row-bg)',
+  textAlign: 'left',
 }
 
 const cardHeadStyle: CSSProperties = {
@@ -1008,24 +1057,23 @@ const cardHeadStyle: CSSProperties = {
   minWidth: 0,
 }
 
-/** 卡片内未读点：角框青标记（与 ✓ 状态点同一 HUD 语言）。 */
+/** 卡片内未读点：蓝色小圆。 */
 const unreadDotStyle: CSSProperties = {
   flex: 'none',
-  width: 7,
-  height: 7,
-  boxSizing: 'border-box',
-  borderRadius: 2,
-  border: '1.5px solid var(--dpl-accent)',
-  background: 'transparent',
+  width: 8,
+  height: 8,
+  borderRadius: '50%',
+  background: 'var(--dpl-accent)',
+  boxShadow: '0 0 0 3px color-mix(in srgb, var(--dpl-accent) 14%, transparent)',
 }
 
 const sessionTitleStyle: CSSProperties = {
   flex: 'none',
-  maxWidth: 200,
+  maxWidth: 340,
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
-  fontSize: 13,
+  fontSize: 14,
   fontWeight: 500,
   color: 'var(--dpl-fg)',
 }
@@ -1034,21 +1082,21 @@ const metaStyle: CSSProperties = {
   flex: 1,
   minWidth: 0,
   textAlign: 'right',
-  fontSize: 11,
+  fontSize: 12,
   color: 'var(--dpl-fg-weak)',
   whiteSpace: 'nowrap',
 }
 
 const closeStyle: CSSProperties = {
   flex: 'none',
-  width: 20,
-  height: 20,
+  width: 22,
+  height: 22,
   borderRadius: 6,
   border: 'none',
   background: 'transparent',
   color: 'var(--dpl-fg-weak)',
   fontSize: 13,
-  lineHeight: '20px',
+  lineHeight: '22px',
   cursor: 'pointer',
 }
 
@@ -1058,26 +1106,145 @@ const answerStyle: CSSProperties = {
   overflowY: 'auto',
   whiteSpace: 'pre-wrap',
   wordBreak: 'break-word',
-  fontSize: 12,
-  lineHeight: '19px',
+  fontSize: 12.5,
+  lineHeight: '20px',
   color: 'var(--dpl-fg-dim)',
-  borderTop: '1px dashed var(--dpl-panel-border)',
-  paddingTop: 6,
+  borderTop: '1px dashed var(--dpl-divider)',
+  paddingTop: 8,
   // 字体族显式跟随容器：<pre> 默认 monospace，会无视胶囊字体设置。
   fontFamily: 'inherit',
 }
 
 const errorTagStyle: CSSProperties = {
   flex: 'none',
-  fontSize: 11,
+  fontSize: 12,
+  lineHeight: '20px',
   color: 'var(--dpl-warn)',
 }
 
+/** 运行面板的空态小字。 */
 const emptyStyle: CSSProperties = {
-  padding: '18px 8px',
+  padding: '14px 8px',
   textAlign: 'center',
   fontSize: 12,
   color: 'var(--dpl-fg-weak)',
+}
+
+/** 记录面板空状态容器：插画 + 提示胶囊 + 底部波浪，波浪被圆角裁切。 */
+const emptyStateStyle: CSSProperties = {
+  position: 'relative',
+  overflow: 'hidden',
+  minHeight: 252,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 14,
+  padding: '26px 20px 36px',
+}
+
+/** 空状态提示胶囊：浅紫蓝底 + 蓝灰字（参考稿百分比一致）。 */
+const captionPillStyle: CSSProperties = {
+  position: 'relative',
+  zIndex: 1,
+  flex: 'none',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 4,
+  height: 34,
+  padding: '0 26px',
+  borderRadius: 17,
+  background: 'var(--dpl-caption-bg)',
+  color: 'var(--dpl-caption-fg)',
+  fontSize: 15,
+  lineHeight: '22px',
+  whiteSpace: 'nowrap',
+}
+
+/** 空状态插画：叠层蓝色气泡 + 白底三点气泡 + 云朵/点环装饰（复刻参考稿，
+ *  比例按参考量取：后卡 88×80/-8°、前卡 88×84/4°、白气泡 63×50 + 左下尾巴）。 */
+function EmptyIllustration(): JSX.Element {
+  return (
+    <svg
+      width={240} height={136} viewBox="0 0 240 136" aria-hidden style={{ flex: 'none' }}
+      preserveAspectRatio="xMidYMid meet"
+    >
+      <defs>
+        <linearGradient id="dpl-illo-1" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="var(--dpl-illo-1a)" />
+          <stop offset="1" stopColor="var(--dpl-illo-1b)" />
+        </linearGradient>
+        <linearGradient id="dpl-illo-2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="var(--dpl-illo-2a)" />
+          <stop offset="1" stopColor="var(--dpl-illo-2b)" />
+        </linearGradient>
+      </defs>
+      {/* 淡蓝云朵 */}
+      <ellipse cx="44" cy="124" rx="100" ry="24" fill="var(--dpl-cloud)" />
+      <ellipse cx="208" cy="126" rx="95" ry="22" fill="var(--dpl-cloud)" />
+      {/* 左侧点环装饰 */}
+      {[0, 1, 2, 3, 4, 5].map(i => {
+        const a = (Math.PI * 2 * i) / 6 - Math.PI / 2
+        return (
+          <circle
+            key={i}
+            cx={27 + Math.cos(a) * 11}
+            cy={58 + Math.sin(a) * 11}
+            r={2.1}
+            fill="var(--dpl-illo-dot)"
+            opacity={0.8}
+          />
+        )
+      })}
+      {/* 后层气泡（微旋转 -8°，顶部高光条） */}
+      <rect x="68" y="10" width="88" height="80" rx="20" fill="url(#dpl-illo-1)" transform="rotate(-8 112 50)" />
+      <rect x="76" y="22" width="62" height="10" rx="5" fill="var(--dpl-illo-1a)" opacity="0.95" transform="rotate(-8 112 50)" />
+      {/* 前层气泡（旋转 4°） */}
+      <rect x="86" y="26" width="88" height="84" rx="20" fill="url(#dpl-illo-2)" transform="rotate(4 130 68)" />
+      {/* 白色对话气泡 + 左下尾巴 + 三点 */}
+      <g>
+        <path d="M114 88 L103 104 L127 92 Z" fill="#fdfeff" stroke="var(--dpl-illo-2b)" strokeOpacity="0.5" strokeWidth="1" />
+        <rect x="103" y="40" width="63" height="50" rx="17" fill="#fdfeff" />
+        <circle cx="122" cy="65" r="4.8" fill="var(--dpl-illo-dots)" />
+        <circle cx="137" cy="65" r="4.8" fill="var(--dpl-illo-dots)" />
+        <circle cx="152" cy="65" r="4.8" fill="var(--dpl-illo-dots)" />
+      </g>
+      {/* 悬浮圆点 */}
+      <circle cx="42" cy="22" r="3.5" fill="var(--dpl-illo-dot)" />
+      <circle cx="177" cy="20" r="4.5" fill="var(--dpl-illo-dot)" />
+    </svg>
+  )
+}
+
+/** 底部波浪装饰：左低右高的浅蓝缓丘，贴在空状态容器底部。 */
+function WaveDecoration(): JSX.Element {
+  return (
+    <svg
+      style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        height: 86,
+        zIndex: 0,
+        pointerEvents: 'none',
+      }}
+      viewBox="0 0 640 86"
+      preserveAspectRatio="none"
+      aria-hidden
+    >
+      <path d="M0,74 C120,68 252,60 364,55 C476,50 566,52 640,58 L640,86 L0,86 Z" fill="var(--dpl-wave)" />
+    </svg>
+  )
+}
+
+/** 记录列表容器（有记录时）：行间距与上下留白。 */
+const listStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 10,
+  padding: '2px 20px 24px',
 }
 
 // ---- 基础设置行（与 General 区条目一致的 Setting-Cell 布局）----
@@ -1669,11 +1836,11 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
     // 「凌晨 N 点」只在真的凌晨（0-4 点）才说得通。该提醒的时段可自定义，
     // 旧文案对任何时刻都硬说「凌晨」——设成 18:00-23:00 会得到「凌晨 18 点了」。
     reminderLabel = hour <= 4
-      ? `凌晨 ${hour} 点了 · 注意休息`
-      : `${hour >= 22 ? '夜深了' : `已 ${hour} 点`} · 注意休息`
+      ? `凌晨 ${hour} 点了，注意休息`
+      : `${hour >= 22 ? '夜深了' : `已 ${hour} 点`}，注意休息`
   } else if (restActive) {
     reminderIcon = 'coffee'
-    reminderLabel = `休息时间（${restConfig.start}-${restConfig.end}）· 该休息一下了`
+    reminderLabel = `休息时间（${restConfig.start}-${restConfig.end}），该休息一下了`
   }
 
   // 平时（无提醒）：随机轮播开心话术 / AI 名词小知识。
@@ -1763,11 +1930,18 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
         data-dragging={dragging ? '1' : '0'}
         style={pillShellStyle(shellWidth)}
       >
-        {/* 健康提醒徽章：设定时段内常驻显示（黄色），与完成通知共存不挤占 */}
+        {/* 健康提醒徽章：设定时段内常驻显示（橙色月亮/咖啡 + 橙字），
+            与完成通知共存不挤占；复刻参考稿左段芯片。 */}
         {reminderLabel !== null && (
           <>
-            <span style={reminderBadgeStyle} title={reminderLabel} data-dp-zone="badge">
-              <LineIcon kind={reminderIcon} size={Math.max(10, Math.round(13 * appearance.scale))} />
+            <span
+              style={{ ...reminderBadgeStyle, ...shellChildStyle }}
+              title={reminderLabel}
+              data-dp-zone="badge"
+            >
+              {reminderIcon === 'moon'
+                ? <MoonIcon size={Math.max(14, Math.round(18 * appearance.scale))} />
+                : <CoffeeIcon size={Math.max(14, Math.round(18 * appearance.scale))} />}
               <span>{reminderLabel}</span>
             </span>
             <span style={pillDividerStyle} aria-hidden />
@@ -1802,6 +1976,7 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
         {/* 主体：点击 = 直接进入最新完成的会话；按住拖动 = 移动胶囊 */}
         <button
           type="button"
+          className="dsh-done-pill-main"
           data-dp-zone="main"
           onKeyDown={(event) => {
             // 键盘可达：点击语义原先只由 wrap 的 pointerup 合成，Enter/Space
@@ -1821,14 +1996,10 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
           onMouseEnter={() => { setHovered(true); setHoveredRunning(false) }}
         >
           {unreadCount > 0 && latest !== undefined ? (
-            <span style={checkIconStyle(unreadCount)} aria-hidden>✓</span>
+            <span style={checkBadgeStyle} aria-hidden>✓</span>
           ) : (
-            // 图标跟随**当前主文案**：提醒态的月亮/咖啡图标已在左侧徽章上展示，
-            // 主文案此时是知识轮播，再放一个月亮会出现「月亮 + Encoder 名词解释」
-            // 这种图文不符的组合（旧实现的判断依据是提醒是否激活）。
-            <span style={reminderIconStyle} aria-hidden>
-              <LineIcon kind={funLine.icon} size={Math.max(10, Math.round(13 * appearance.scale))} />
-            </span>
+            // 图标固定灯泡徽章（复刻参考稿右段）：背景色随主题由 .dpl-bulb-badge 提供。
+            <BulbBadge scale={appearance.scale} />
           )}
           <span
             ref={labelRef}
@@ -1846,6 +2017,9 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
           >
             {displayText}
           </span>
+          <span className="dpl-chev" style={{ flex: 'none', display: 'inline-flex' }} aria-hidden>
+            <ChevronIcon size={Math.max(11, Math.round(13 * appearance.scale))} />
+          </span>
         </button>
       </div>
       {/* 运行中任务面板：悬停左侧计数块时从下方滑出 */}
@@ -1859,6 +2033,7 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
         onPointerDown={(event) => { event.stopPropagation() }}
       >
         <div className="dp-panel-head" style={headStyle}>
+          <span style={headBarStyle} aria-hidden />
           <span style={headTitleStyle}>正在执行中</span>
           <span style={headMetaStyle}>{`${runningSessions.length} 个任务 · 点击进入会话`}</span>
         </div>
@@ -1899,54 +2074,79 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
         onPointerDown={(event) => { event.stopPropagation() }}
       >
         <div className="dp-panel-head" style={headStyle}>
+          <span style={headBarStyle} aria-hidden />
           <span style={headTitleStyle}>对话完成记录</span>
-          <span style={headMetaStyle}>{`${entries.length} 条 · 点击卡片进入会话`}</span>
-        </div>
-        {entries.map((item) => {
-          const title = item.title
-          const unread = !readIds.has(item.id)
-          // 主文本 = 完成的那条对话消息；无消息时回退会话标题。
-          const headLabel = item.question !== '' ? item.question : item.title
-          return (
-            <div
-              key={item.id}
-              className="dsh-done-pill-row"
-              style={cardStyle}
-              role="button"
-              tabIndex={0}
-              title={`「${title}」${item.question !== '' ? `问：${item.question}` : ''} — 点击打开会话`}
+          <span style={headMetaStyle}>
+            {`${entries.length} 条 ·`}
+            <button
+              type="button"
+              className="dsh-done-pill-link"
+              style={headLinkStyle}
+              disabled={entries.length === 0}
               onPointerDown={(event) => { event.stopPropagation() }}
-              onClick={() => { openSession(item.sessionId, item.id) }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault()
-                  openSession(item.sessionId, item.id)
-                }
+              onClick={(event) => {
+                event.stopPropagation()
+                if (latest !== undefined) openSession(latest.sessionId)
               }}
             >
-              <div style={cardHeadStyle}>
-                {unread && <span style={unreadDotStyle} aria-hidden />}
-                <span style={sessionTitleStyle}>{headLabel}</span>
-                {item.reasonKind === 'error' && <span style={errorTagStyle}>出错结束</span>}
-                <span style={metaStyle}>
-                  {`回合 ${item.turn >= 0 ? item.turn + 1 : '?'} · ${formatTime(item.endedAt)}`}
-                </span>
-                <button
-                  type="button"
-                  className="dsh-done-pill-close"
-                  style={closeStyle}
-                  aria-label="移除这条记录（不跳转会话）"
+              点击卡片进入会话
+            </button>
+          </span>
+        </div>
+        {entries.length === 0 ? (
+          <div style={emptyStateStyle}>
+            <EmptyIllustration />
+            <span style={captionPillStyle}>暂无记录 — 任一会话的对话完成后会出现在这里</span>
+            <WaveDecoration />
+          </div>
+        ) : (
+          <div style={listStyle}>
+            {entries.map((item) => {
+              const title = item.title
+              const unread = !readIds.has(item.id)
+              // 主文本 = 完成的那条对话消息；无消息时回退会话标题。
+              const headLabel = item.question !== '' ? item.question : item.title
+              return (
+                <div
+                  key={item.id}
+                  className="dsh-done-pill-row"
+                  style={cardStyle}
+                  role="button"
+                  tabIndex={0}
+                  title={`「${title}」${item.question !== '' ? `问：${item.question}` : ''} — 点击打开会话`}
                   onPointerDown={(event) => { event.stopPropagation() }}
-                  onClick={(event) => { event.stopPropagation(); dismiss(item.id) }}
+                  onClick={() => { openSession(item.sessionId, item.id) }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      openSession(item.sessionId, item.id)
+                    }
+                  }}
                 >
-                  ✕
-                </button>
-              </div>
-              {item.answer !== '' && <pre style={answerStyle}>{item.answer}</pre>}
-            </div>
-          )
-        })}
-        {entries.length === 0 && <div style={emptyStyle}>暂无记录 — 任一会话的对话完成后会出现在这里</div>}
+                  <div style={cardHeadStyle}>
+                    {unread && <span style={unreadDotStyle} aria-hidden />}
+                    <span style={sessionTitleStyle}>{headLabel}</span>
+                    {item.reasonKind === 'error' && <span style={errorTagStyle}>出错结束</span>}
+                    <span style={metaStyle}>
+                      {`回合 ${item.turn >= 0 ? item.turn + 1 : '?'} · ${formatTime(item.endedAt)}`}
+                    </span>
+                    <button
+                      type="button"
+                      className="dsh-done-pill-close"
+                      style={closeStyle}
+                      aria-label="移除这条记录（不跳转会话）"
+                      onPointerDown={(event) => { event.stopPropagation() }}
+                      onClick={(event) => { event.stopPropagation(); dismiss(item.id) }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  {item.answer !== '' && <pre style={answerStyle}>{item.answer}</pre>}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>,
     document.body,
