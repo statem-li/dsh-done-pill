@@ -527,6 +527,11 @@ const PILL_STYLE_ID = 'dsh-done-pill-css'
 
 const PILL_CSS = `
 @keyframes dpLineIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+@keyframes dpMount{from{opacity:0;transform:translateY(-10px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes dpPop{0%{transform:scale(.4)}55%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes dpSpark{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.55}}
+@keyframes dpRowIn{from{opacity:0;transform:translateY(6px) scale(.99)}to{opacity:1;transform:none}}
+@keyframes dpGlowPulse{0%,100%{box-shadow:0 0 0 3px color-mix(in srgb,var(--dpl-accent) 14%,transparent)}50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--dpl-accent) 6%,transparent)}}
 /* ── 对话胶囊（soft-card）：复刻「对话完成记录」参考稿 ──
    浅色主题（默认）：暖白渐变胶囊 + 蓝强调 + 白色圆角大卡片。 */
 .dsh-done-pill{
@@ -588,17 +593,35 @@ body[data-ds-dark-theme] .dsh-done-pill{
 /* 外壳：暖白渐变胶囊（左侧奶油 → 右侧白，随内容横向渐变）+ 柔投影。
    表面色只走样式表：内联只写几何（见 pillShellStyle），避免内联覆盖样式表。 */
 .dsh-done-pill-shell{
-  background:linear-gradient(100deg,#fef6ec 0%,#fdfcf6 42%,#fcfdfe 100%);
+  --mx:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,.75) 0%,rgba(255,255,255,0) 26%),linear-gradient(100deg,#fff8ef 0%,#fdfcf6 42%,#f7fbff 100%);
   color:var(--dpl-fg);
-  box-shadow:var(--dpl-shell-shadow);
+  box-shadow:var(--dpl-shell-shadow),inset 0 1px 0 rgba(255,255,255,.8);
+  animation:dpMount .55s cubic-bezier(.32,.72,0,1) backwards;
+}
+.dsh-done-pill-shell::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;
+  background:radial-gradient(120px 40px at var(--mx) 0%,color-mix(in srgb,var(--dpl-accent) 14%,transparent),transparent 70%);
+  transition:opacity .25s ease;
+}
+.dsh-done-pill-shell:hover::before{opacity:1}
+.dsh-done-pill-shell:hover{transform:translateY(-1px)}
+.dsh-done-pill-shell:active{transform:translateY(0) scale(.985)}
+.dpl-reminder-pill{
+  display:inline-flex;align-items:center;
+  background:color-mix(in srgb,var(--dpl-warn) 10%,transparent);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dpl-warn) 24%,transparent);
+  border-radius:999px;padding:3px 11px;
 }
 .dsh-done-pill-shell:hover{box-shadow:var(--dpl-shell-shadow-hover)}
 body[data-ds-dark-theme] .dsh-done-pill-shell{
-  background:linear-gradient(100deg,#262832 0%,#1f222a 42%,#1b1e25 100%);
+  background:linear-gradient(180deg,rgba(255,255,255,.09) 0%,rgba(255,255,255,0) 26%),linear-gradient(100deg,#2b2e38 0%,#21242d 42%,#1c1f27 100%);
+  box-shadow:var(--dpl-shell-shadow),inset 0 1px 0 rgba(255,255,255,.12);
 }
 /* 未读态：主文字加重。 */
 .dsh-done-pill-shell[data-unread="1"]{
-  font-weight:500;
+  font-weight:550;letter-spacing:-.005em;
+  box-shadow:var(--dpl-shell-shadow-hover),0 0 0 1px color-mix(in srgb,var(--dpl-accent) 32%,transparent),0 0 22px color-mix(in srgb,var(--dpl-accent) 22%,transparent);
 }
 /* 拖拽中：关闭扫描/动画。 */
 .dsh-done-pill-shell[data-dragging="1"]::after{animation:none;opacity:0;transform:none}
@@ -606,7 +629,7 @@ body[data-ds-dark-theme] .dsh-done-pill-shell{
 .dsh-done-pill-shell::after{
   content:'';position:absolute;top:0;bottom:0;left:0;width:38%;
   pointer-events:none;opacity:0;
-  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--dpl-accent) 8%,transparent) 50%,transparent);
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--dpl-accent) 15%,transparent) 42%,rgba(255,255,255,.5) 50%,color-mix(in srgb,var(--dpl-accent) 15%,transparent) 58%,transparent);
   transform:translateX(-140%);will-change:transform,opacity;
 }
 .dsh-done-pill-shell[data-unread="1"]::after{opacity:1;animation:dpScan 3.4s cubic-bezier(.4,0,.2,1) infinite}
@@ -638,11 +661,110 @@ body[data-ds-dark-theme] .dpl-bulb-badge{
   background:linear-gradient(160deg,#26344e 0%,#1d2940 100%);
   color:#8ab5ff;
 }
-.dpl-bulb-spark{background:#6aa1f7}
-body[data-ds-dark-theme] .dpl-bulb-spark{background:#6aa1f7}
+.dpl-bulb-badge{transition:transform .25s cubic-bezier(.32,.72,0,1),box-shadow .25s ease}
+.dsh-done-pill-main:hover .dpl-bulb-badge{transform:scale(1.1) rotate(-7deg);box-shadow:inset 0 0 0 1.5px var(--dpl-accent-ring),0 0 14px color-mix(in srgb,var(--dpl-accent) 35%,transparent)}
+.dpl-bulb-spark{background:#6aa1f7;animation:dpSpark 2.6s ease-in-out infinite}
+body[data-ds-dark-theme] .dpl-bulb-badge{transition:transform .25s cubic-bezier(.32,.72,0,1),box-shadow .25s ease}
+.dsh-done-pill-main:hover .dpl-bulb-badge{transform:scale(1.1) rotate(-7deg);box-shadow:inset 0 0 0 1.5px var(--dpl-accent-ring),0 0 14px color-mix(in srgb,var(--dpl-accent) 35%,transparent)}
+.dpl-bulb-spark{background:#6aa1f7;animation:dpSpark 2.6s ease-in-out infinite}
+/* 方案A信息分层：核心词打轻量 Tag（视觉锚点），释义次级色、优先截断。 */
+.dpl-info-tag{flex:none;font-weight:700;font-size:12px;line-height:20px;padding:0 9px;border-radius:6px;background:var(--dpl-accent-soft);color:var(--dpl-accent);white-space:nowrap}
+.dpl-main-desc{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dpl-fg-dim)}
+.dpl-main-desc--plain{color:inherit}
 /* 主体按钮：箭头 hover 右移 2px（微交互）。 */
-.dsh-done-pill-main .dpl-chev{transition:transform .18s ease}
-.dsh-done-pill-main:hover .dpl-chev{transform:translateX(2px)}
+.dsh-done-pill-main .dpl-chev{
+  width:calc(22px * var(--dps));height:calc(22px * var(--dps));border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  color:var(--dpl-fg-dim);background:transparent;
+  transition:transform .22s cubic-bezier(.32,.72,0,1),background .2s ease,color .2s ease;
+}
+.dsh-done-pill-main:hover .dpl-chev{transform:translateX(2px) scale(1.06);background:var(--dpl-accent-soft);color:var(--dpl-accent)}
+.dsh-done-pill [role="dialog"]{backdrop-filter:blur(18px) saturate(1.25);-webkit-backdrop-filter:blur(18px) saturate(1.25)}
+.dsh-done-pill-row{animation:dpRowIn .32s cubic-bezier(.32,.72,0,1) backwards}
+@media (prefers-reduced-motion:reduce){
+  .dsh-done-pill-shell,.dsh-done-pill-shell::after,.dp-run-spin,.dpl-bulb-spark,.dsh-done-pill-row{animation:none !important}
+  .dsh-done-pill-shell,.dsh-done-pill-main .dpl-chev,.dsh-done-pill-row{transition:none !important}
+}
+/* v0.5.0 极简细线：白底细描边、去渐变去辉光（随主题，贴近系统原生） */
+.dsh-done-pill{
+  --dpl-fg:#1a2230;
+  --dpl-fg-dim:#5b6880;
+  --dpl-fg-weak:#8b95a8;
+  --dpl-accent:#2e6ffb;
+  --dpl-accent-2:#1d5ce8;
+  --dpl-accent-soft:#e9f1fe;
+  --dpl-accent-ring:rgba(46,111,251,.35);
+  --dpl-shell-shadow:inset 0 0 0 1px rgba(17,22,31,.12);
+  --dpl-shell-shadow-hover:inset 0 0 0 1px rgba(17,22,31,.24);
+  --dpl-divider:#e8edf5;
+  --dpl-panel-bg:#ffffff;
+  --dpl-panel-border:#e5e8ef;
+  --dpl-panel-shadow:0 8px 24px rgba(20,30,60,.08);
+  --dpl-row-bg:#f4f6fa;
+  --dpl-row-hover:#eceff5;
+  --dpl-caption-bg:#eef1f6;
+  --dpl-caption-fg:#5c7396;
+}
+body[data-ds-dark-theme] .dsh-done-pill{
+  --dpl-fg:#e8ecf4;
+  --dpl-fg-dim:#9aa7bd;
+  --dpl-fg-weak:#6b7890;
+  --dpl-accent:#6fa5ff;
+  --dpl-accent-2:#5b93f5;
+  --dpl-accent-soft:#22314a;
+  --dpl-accent-ring:rgba(111,165,255,.4);
+  --dpl-shell-shadow:inset 0 0 0 1px rgba(255,255,255,.13);
+  --dpl-shell-shadow-hover:inset 0 0 0 1px rgba(255,255,255,.24);
+  --dpl-divider:rgba(255,255,255,.14);
+  --dpl-panel-bg:#1a1d24;
+  --dpl-panel-border:rgba(255,255,255,.1);
+  --dpl-panel-shadow:0 10px 28px rgba(0,0,0,.5);
+  --dpl-row-bg:#232730;
+  --dpl-row-hover:#2a2f3b;
+  --dpl-caption-bg:#262b37;
+  --dpl-caption-fg:#9db1d6;
+}
+.dsh-done-pill-shell{
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(12px) saturate(1.1);
+  -webkit-backdrop-filter:blur(12px) saturate(1.1);
+}
+body[data-ds-dark-theme] .dsh-done-pill-shell{
+  background:rgba(26,29,36,.9);
+}
+.dsh-done-pill-shell::before{display:none}
+.dsh-done-pill-shell:hover{transform:none}
+.dsh-done-pill-shell:active{transform:scale(.99)}
+.dsh-done-pill-shell::after{
+  background:linear-gradient(90deg,transparent,rgba(120,130,150,.14) 50%,transparent);
+}
+.dsh-done-pill-shell[data-unread="1"]{
+  font-weight:550;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dpl-accent) 55%,transparent);
+}
+.dpl-reminder-pill{
+  background:rgba(120,130,150,.12);
+  box-shadow:none;
+}
+.dpl-bulb-badge{
+  background:var(--dpl-accent-soft);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dpl-accent) 30%,transparent);
+  color:var(--dpl-accent);
+}
+body[data-ds-dark-theme] .dpl-bulb-badge{
+  background:var(--dpl-accent-soft);
+  color:var(--dpl-accent);
+}
+.dsh-done-pill-main:hover .dpl-bulb-badge{
+  transform:scale(1.06);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dpl-accent) 45%,transparent);
+}
+.dsh-done-pill-main:hover .dpl-chev{
+  transform:translateX(2px);
+  background:rgba(120,130,150,.14);
+  color:var(--dpl-fg);
+}
+.dsh-done-pill [role="dialog"]{backdrop-filter:none;-webkit-backdrop-filter:none}
 /* 面板内可点行（任务行 / 完成记录卡）：hover 浅蓝底 + 左侧蓝描边。 */
 .dsh-done-pill-row{transition:background .12s ease,box-shadow .12s ease}
 .dsh-done-pill-row:hover{background:var(--dpl-row-hover);box-shadow:inset 3px 0 0 var(--dpl-accent)}
@@ -688,6 +810,8 @@ const wrapStyle = (dragging: boolean, pos: PillPos | null, scale: number, fontSt
   touchAction: 'none',
   ...(fontStack !== '' ? { fontFamily: fontStack } : {}),
   '--dps': String(scale),
+  letterSpacing: '-0.01em',
+  WebkitFontSmoothing: 'antialiased',
   // 上下内衬各 8px：面板贴着 padding box 定位（下方 top:100% / 上方
   // bottom:100%），胶囊与面板之间的视觉缝隙落在容器内，鼠标滑过去不会触发
   // mouseleave。marginTop 抵消上内衬——外壳本体仍精确落在 pos.y，拖拽与
@@ -699,7 +823,7 @@ const wrapStyle = (dragging: boolean, pos: PillPos | null, scale: number, fontSt
   // 一步算准（见 syncPosition），Δw 的过渡期里左缘滑动的量恒为
   // ∓Δw/2，与右缘对称——胶囊呈「两侧拉伸 / 两侧收窄」，而不是先单边
   // 伸缩、再瞬移回中。拖拽中必须关闭，否则位置被过渡拖着走、毫无跟手性。
-  ...(dragging ? {} : { transition: `left ${MORPH_DUR} ease` }),
+  ...(dragging ? {} : { transition: `left ${MORPH_DUR} cubic-bezier(.32,.72,0,1)` }),
 } as unknown as CSSProperties)
 
 /** 胶囊外壳最大宽度（px）：与 pillShellStyle 的 maxWidth 同源——
@@ -737,7 +861,7 @@ const pillShellStyle = (width: number | null): CSSProperties => ({
   overflow: 'hidden',
   // 宽度伸缩与位置滑动/文字淡入同节奏（MORPH_DUR）；颜色类过渡也写在内联，
   // 否则内联 transition 会整条覆盖样式表里的 transition。
-  transition: `width ${MORPH_DUR} ease, box-shadow .18s ease, color .14s ease`,
+  transition: `width ${MORPH_DUR} cubic-bezier(.32,.72,0,1), box-shadow .22s cubic-bezier(.32,.72,0,1), color .14s ease, transform .22s cubic-bezier(.32,.72,0,1)`,
 })
 
 /** 胶囊主体（点击 = 进入最新完成的会话；按住拖动 = 移动胶囊）。
@@ -763,6 +887,7 @@ const checkBadgeStyle: CSSProperties = {
   width: 'calc(20px * var(--dps))',
   height: 'calc(20px * var(--dps))',
   borderRadius: 'calc(7px * var(--dps))',
+  animation: 'dpPop .35s cubic-bezier(.32,.72,0,1)',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -923,12 +1048,12 @@ const floatPanelStyle = (
   color: 'var(--dpl-fg)',
   boxShadow: 'var(--dpl-panel-shadow)',
   opacity: open ? 1 : 0,
-  transform: `translateY(${open ? 0 : (up ? 8 : -8)}px)`,
+  transform: `translateY(${open ? 0 : (up ? 8 : -8)}px) scale(${open ? 1 : .98})`,
   visibility: open ? 'visible' : 'hidden',
   pointerEvents: open ? 'auto' : 'none',
   // 收起时 visibility 延迟到过渡结束再隐藏，滑出动画才完整可见。
   transition: open
-    ? 'opacity .18s ease, transform .18s ease, visibility 0s'
+    ? 'opacity .26s cubic-bezier(.32,.72,0,1), transform .26s cubic-bezier(.32,.72,0,1), visibility 0s'
     : 'opacity .18s ease, transform .18s ease, visibility 0s linear .18s',
 })
 
@@ -1902,6 +2027,21 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
 
   // 主文案：完整展示，不再截断（知识/话术全文）；超出由外壳 maxWidth + 省略号兜底。
   const displayText = pillLabel
+  // 方案A信息分层：Tag（锚点，不收缩）+ 释义（次级色，优先被截断）。
+  // 未读通知 → 计数 Tag + 最新问题；知识轮播 → 术语 Tag + 解释；话术无 Tag 原样。
+  const hasUnreadMain = unreadCount > 0 && latest !== undefined
+  let infoTag: string | null = null
+  let infoDesc = displayText
+  if (hasUnreadMain) {
+    infoTag = `${unreadCount} 条完成`
+    infoDesc = truncate(latestLabel, 56)
+  } else if (funLine.icon === 'bulb') {
+    const sep = funLine.text.search(/[:：]/)
+    if (sep > 0) {
+      infoTag = funLine.text.slice(0, sep).trim()
+      infoDesc = funLine.text.slice(sep + 1).trim()
+    }
+  }
 
   // 宽度平滑跟随：每次渲染后对**子块宽度求和**（子块均不收缩，求和不受
   // shell 自身受控宽度污染，扩/缩双向都准确），交给 CSS transition 过渡。
@@ -1964,6 +2104,7 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
         data-unread={unreadCount > 0 ? '1' : '0'}
         data-dragging={dragging ? '1' : '0'}
         style={pillShellStyle(shellWidth)}
+        onMouseMove={(event) => { const t = event.currentTarget; const r = t.getBoundingClientRect(); if (r.width > 0) t.style.setProperty('--mx', '' + ((event.clientX - r.left) / r.width * 100).toFixed(1) + '%'); }}
       >
         {/* 健康提醒徽章：设定时段内常驻显示（橙色月亮/咖啡 + 橙字），
             与完成通知共存不挤占；复刻参考稿左段芯片。 */}
@@ -1977,7 +2118,7 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
               {reminderIcon === 'moon'
                 ? <MoonIcon size={Math.max(14, Math.round(18 * appearance.scale))} />
                 : <CoffeeIcon size={Math.max(14, Math.round(18 * appearance.scale))} />}
-              <span>{reminderLabel}</span>
+              <span className="dpl-reminder-pill">{reminderLabel}</span>
             </span>
             <span style={pillDividerStyle} aria-hidden />
           </>
@@ -2046,13 +2187,17 @@ export function DonePill(props: DonePillProps): JSX.Element | null {
               // 文字是被**硬切**的（末字截一半，没有「…」）。装饰宽实测得来，
               // 带提醒徽章/运行中计数时也算得准。
               maxWidth: `calc(min(${SHELL_MAX_W}px, 100vw - 48px) - ${decoWidth}px)`,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              minWidth: 0,
               overflow: 'hidden',
-              textOverflow: 'ellipsis',
               opacity: 0,
               animation: `dpLineIn ${MORPH_DUR} ease forwards`,
             }}
           >
-            {displayText}
+            {infoTag !== null && <span className="dpl-info-tag">{infoTag}</span>}
+            <span className={infoTag !== null ? 'dpl-main-desc' : 'dpl-main-desc dpl-main-desc--plain'}>{infoDesc}</span>
           </span>
           <span className="dpl-chev" style={{ flex: 'none', display: 'inline-flex' }} aria-hidden>
             <ChevronIcon size={Math.max(11, Math.round(13 * appearance.scale))} />
